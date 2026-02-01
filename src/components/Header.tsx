@@ -1,8 +1,9 @@
-import { AppBar, Box, Container, IconButton, Toolbar, Typography, useMediaQuery, useTheme } from "@mui/material";
+import { AppBar, Box, Container, IconButton, Toolbar, Typography } from "@mui/material";
 import FlightTakeoffIcon from "@mui/icons-material/FlightTakeoff";
 import LightModeIcon from "@mui/icons-material/LightMode";
 import DarkModeIcon from "@mui/icons-material/DarkMode";
 import { useThemeMode } from "../theme/ThemeContext";
+import { useMobile } from "../app/hooks";
 
 type Props = {
   title?: string;
@@ -11,8 +12,7 @@ type Props = {
 export default function Header({
   title = "SkyRoute",
 }: Props) {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const isMobile = useMobile("sm");
   const { mode, toggleMode } = useThemeMode();
 
   return (

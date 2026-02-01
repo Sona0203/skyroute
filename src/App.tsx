@@ -11,9 +11,7 @@ export default function App() {
     <AppShell>
       <Stack spacing={2}>
         <SearchForm />
-        {submittedQuery ? (
-          <ResultsLayout flights={undefined} loading={false} error={false} />
-        ) : null}
+        {submittedQuery ? <ResultsLayout /> : null}
       </Stack>
     </AppShell>
   );

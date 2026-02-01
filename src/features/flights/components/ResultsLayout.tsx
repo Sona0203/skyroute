@@ -1,8 +1,7 @@
-import { Box, Drawer, IconButton, Stack, useMediaQuery, useTheme } from "@mui/material";
+import { Box, Drawer, IconButton, Stack } from "@mui/material";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import { useMemo, useState, useEffect, useRef } from "react";
-import { useAppSelector } from "../../../app/hooks";
-import type { FlightOffer } from "../types";
+import { useAppSelector, useMobile } from "../../../app/hooks";
 import {
   makeSelectAvailableAirlines,
   makeSelectChartSeries,
@@ -19,15 +18,8 @@ import ActiveFilters from "./ActiveFilters";
 import SkeletonCard from "./SkeletonCard";
 import SearchSummaryBar from "./SearchSummaryBar";
 
-type Props = {
-  flights: FlightOffer[] | undefined;
-  loading: boolean;
-  error: boolean;
-};
-
-export default function ResultsLayout({ flights: initialFlights, loading: initialLoading, error: initialError }: Props) {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+export default function ResultsLayout() {
+  const isMobile = useMobile("md");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const resultsRef = useRef<HTMLDivElement>(null);
 
@@ -35,27 +27,34 @@ export default function ResultsLayout({ flights: initialFlights, loading: initia
   
   // Use infinite scroll hook
   const {
-    flights: paginatedFlights,
+    flights,
     hasMore,
-    isLoading: isLoadingFirstPage,
+    isLoading,
     isLoadingMore,
-    error: paginationError,
+    error,
     loadMore,
   } = useInfiniteFlights(submittedQuery);
 
-  // Use paginated flights from infinite scroll hook
-  const flights = paginatedFlights.length > 0 ? paginatedFlights : (initialFlights ?? []);
-  const loading = isLoadingFirstPage || (initialLoading && flights.length === 0);
-  const error = paginationError || initialError;
+  // Track previous query to detect when return date is added/removed
+  const previousQueryRef = useRef<string>("");
+  const currentQueryKey = useMemo(() => {
+    if (!submittedQuery) return "";
+    return `${submittedQuery.origin}-${submittedQuery.destination}-${submittedQuery.departDate}-${submittedQuery.returnDate || ""}`;
+  }, [submittedQuery]);
 
   // Smoothly scroll down to the results when they finish loading
   useEffect(() => {
-    if (!loading && flights && flights.length > 0 && resultsRef.current) {
-      setTimeout(() => {
-        resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-      }, 100);
+    if (!isLoading && flights && flights.length > 0 && resultsRef.current) {
+      // Only auto-scroll if this is a new search (query changed)
+      const isNewSearch = previousQueryRef.current !== currentQueryKey;
+      if (isNewSearch) {
+        setTimeout(() => {
+          resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }, 100);
+      }
+      previousQueryRef.current = currentQueryKey;
     }
-  }, [loading, flights]);
+  }, [isLoading, flights, currentQueryKey]);
 
   // Press Escape to close the filters drawer
   useEffect(() => {
@@ -87,18 +86,21 @@ export default function ResultsLayout({ flights: initialFlights, loading: initia
     </Box>
   );
 
-  // Show loading skeletons while we're fetching
-  if (loading) {
+  // Show loading skeletons while we're fetching (initial load or query change)
+  if (isLoading) {
     return (
-      <Box ref={resultsRef}>
-        <Stack spacing={1.5}>
-          <Stack spacing={1}>
-            {[1, 2, 3, 4].map((i) => (
-              <SkeletonCard key={i} />
-            ))}
+      <>
+        {submittedQuery && <SearchSummaryBar flightCount={0} />}
+        <Box ref={resultsRef}>
+          <Stack spacing={1.5}>
+            <Stack spacing={1}>
+              {[1, 2, 3, 4].map((i) => (
+                <SkeletonCard key={i} />
+              ))}
+            </Stack>
           </Stack>
-        </Stack>
-      </Box>
+        </Box>
+      </>
     );
   }
 
@@ -203,7 +205,7 @@ export default function ResultsLayout({ flights: initialFlights, loading: initia
             {filteredFlights.length > 0 ? (
               <VirtualizedFlightList
                 flights={filteredFlights}
-                allFlights={filteredFlights}
+                allFlights={flights}
                 onLoadMore={loadMore}
                 hasMore={hasMore}
                 isLoadingMore={isLoadingMore}

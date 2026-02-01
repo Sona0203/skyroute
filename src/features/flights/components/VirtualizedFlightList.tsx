@@ -1,16 +1,18 @@
-import { Box, Stack, Typography, CircularProgress, useMediaQuery, useTheme } from "@mui/material";
+import { Box, Stack, Typography, CircularProgress } from "@mui/material";
 import { VariableSizeList as List } from "react-window";
 import { useEffect, useRef, useCallback, useMemo } from "react";
 import type { FlightOffer } from "../types";
 import FlightCard from "./FlightCard";
 import { getFlightBadges } from "../utils";
-
-const BASE_ITEM_HEIGHT = 240; // Base height for one-way flights (desktop)
-const BASE_ITEM_HEIGHT_MOBILE = 550; // Base height for one-way flights (mobile - very generous to prevent overlap)
-const RETURN_FLIGHT_EXTRA_HEIGHT = 180; // Extra height for return flight
-const RETURN_FLIGHT_EXTRA_HEIGHT_MOBILE = 450; // Extra height for return flight (mobile - very generous)
-const CARD_SPACING_DESKTOP = 8; // Spacing between cards (desktop pb: 1 = 8px)
-const CARD_SPACING_MOBILE = 24; // Spacing between cards (mobile pb: 3 = 24px)
+import { useMobile } from "../../../app/hooks";
+import {
+  BASE_ITEM_HEIGHT,
+  BASE_ITEM_HEIGHT_MOBILE,
+  RETURN_FLIGHT_EXTRA_HEIGHT,
+  RETURN_FLIGHT_EXTRA_HEIGHT_MOBILE,
+  CARD_SPACING_DESKTOP,
+  CARD_SPACING_MOBILE,
+} from "../../../constants";
 
 type Props = {
   flights: FlightOffer[];
@@ -27,10 +29,10 @@ function VirtualizedFlightList({
   hasMore, 
   isLoadingMore 
 }: Props) {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const isMobile = useMobile("md");
   const listRef = useRef<List>(null);
   const loadMoreTriggeredRef = useRef(false);
+  const previousFlightStructureRef = useRef<string>("");
 
   // Calculate total height - use viewport height for better scrolling experience
   const listHeight = useMemo(() => {
@@ -43,27 +45,58 @@ function VirtualizedFlightList({
     return availableHeight;
   }, [isMobile]);
 
+  // Detect when flight structure changes (one-way to round-trip or vice versa)
+  const currentFlightStructure = useMemo(() => {
+    if (flights.length === 0) return "";
+    // Create a signature based on whether flights are one-way or round-trip
+    const hasRoundTrip = flights.some(f => f.legs.length > 1);
+    return hasRoundTrip ? "round-trip" : "one-way";
+  }, [flights]);
+
+  // Reset list when flight structure changes (e.g., return date added/removed)
+  useEffect(() => {
+    if (
+      listRef.current &&
+      previousFlightStructureRef.current !== "" &&
+      previousFlightStructureRef.current !== currentFlightStructure
+    ) {
+      // Reset all cached item sizes and scroll to top
+      listRef.current.resetAfterIndex(0, true);
+      // Small delay to ensure smooth transition
+      setTimeout(() => {
+        if (listRef.current) {
+          listRef.current.scrollToItem(0, "start");
+        }
+      }, 50);
+    }
+    previousFlightStructureRef.current = currentFlightStructure;
+  }, [currentFlightStructure]);
+
+  // Fixed spacing constant - same for all cards regardless of type
+  const cardSpacing = useMemo(() => {
+    return isMobile ? CARD_SPACING_MOBILE : CARD_SPACING_DESKTOP;
+  }, [isMobile]);
+
   // Calculate item height based on whether it's round-trip and screen size
   const getItemSize = useCallback(
     (index: number) => {
       const flight = flights[index];
       if (!flight) {
-        const spacing = isMobile ? CARD_SPACING_MOBILE : CARD_SPACING_DESKTOP;
-        return isMobile ? BASE_ITEM_HEIGHT_MOBILE + spacing : BASE_ITEM_HEIGHT + spacing;
+        return isMobile ? BASE_ITEM_HEIGHT_MOBILE + cardSpacing : BASE_ITEM_HEIGHT + cardSpacing;
       }
       
       // Base height depends on screen size
       const baseHeight = isMobile ? BASE_ITEM_HEIGHT_MOBILE : BASE_ITEM_HEIGHT;
       const extraHeight = isMobile ? RETURN_FLIGHT_EXTRA_HEIGHT_MOBILE : RETURN_FLIGHT_EXTRA_HEIGHT;
-      const spacing = isMobile ? CARD_SPACING_MOBILE : CARD_SPACING_DESKTOP;
       
       // Round-trip flights have 2 legs, so they need more height
       const cardHeight = flight.legs.length > 1 ? baseHeight + extraHeight : baseHeight;
       
-      // Add spacing between cards (included in the height so cards don't overlap)
-      return cardHeight + spacing;
+      // Total item height = card height + spacing
+      // Spacing is applied as padding-bottom in Row component - SAME value for all cards
+      return cardHeight + cardSpacing;
     },
-    [flights, isMobile]
+    [flights, isMobile, cardSpacing]
   );
 
   // Handle scroll for infinite loading - trigger when near bottom
@@ -120,21 +153,21 @@ function VirtualizedFlightList({
         >
           <Box sx={{ 
             px: { xs: 0, sm: 0.5 }, 
-            pb: { xs: 3, sm: 1 }, // Spacing between cards
+            pb: cardSpacing, // Apply spacing as padding-bottom - SAME value for all cards
             width: "100%",
             height: "100%",
             boxSizing: "border-box",
             display: "flex",
             flexDirection: "column",
           }}>
-            <Box sx={{ flex: "0 0 auto" }}>
+            <Box sx={{ flex: "0 0 auto", width: "100%" }}>
               <FlightCard f={flight} allFlights={allFlights} badges={badges} />
             </Box>
           </Box>
         </div>
       );
     },
-    [flights, allFlights]
+    [flights, allFlights, cardSpacing]
   );
 
   if (flights.length === 0) {
@@ -184,7 +217,7 @@ function VirtualizedFlightList({
             }
           }}
         >
-          <Stack spacing={2}>
+          <Stack spacing={1}>
             {flights.map((flight) => {
               const badges = getFlightBadges(flight, allFlights);
               return (

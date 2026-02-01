@@ -2,14 +2,13 @@ import { Autocomplete, CircularProgress, TextField } from "@mui/material";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useAirportAutocompleteQuery } from "../../flights/flightsApi";
 import type { AirportOption } from "../../flights/types";
+import { AIRPORT_AUTOCOMPLETE_DEBOUNCE_MS } from "../../../constants";
 
 type Props = {
   label: string;
   value: string; // The IATA code stored in Redux
   onChange: (iataCode: string) => void;
 };
-
-const DEBOUNCE_MS = 250;
 
 function formatLabel(o: AirportOption) {
   return o.label;
@@ -80,7 +79,7 @@ export default function AirportAutocomplete({ label, value, onChange }: Props) {
 
     debounceRef.current = window.setTimeout(() => {
       setSearchQuery(query);
-    }, DEBOUNCE_MS);
+    }, AIRPORT_AUTOCOMPLETE_DEBOUNCE_MS);
 
     return () => {
       if (debounceRef.current) window.clearTimeout(debounceRef.current);

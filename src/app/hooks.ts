@@ -1,6 +1,10 @@
-import type { TypedUseSelectorHook } from "react-redux";
-import { useDispatch, useSelector } from "react-redux";
-import type { RootState, AppDispatch } from "./store";
+import { useMediaQuery, useTheme } from "@mui/material";
 
-export const useAppDispatch = () => useDispatch<AppDispatch>();
-export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;
+// Custom hook for mobile detection - use this instead of repeating useMediaQuery everywhere
+export function useMobile(breakpoint: "sm" | "md" = "md") {
+  const theme = useTheme();
+  return useMediaQuery(theme.breakpoints.down(breakpoint));
+}
+
+// Re-export Redux hooks
+export { useAppDispatch, useAppSelector } from "./store";

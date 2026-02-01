@@ -6,12 +6,10 @@ import {
     Stack,
     TextField,
     Typography,
-    useMediaQuery,
-    useTheme,
   } from "@mui/material";
   import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
   import { useEffect, useRef } from "react";
-  import { useAppDispatch, useAppSelector } from "../../../app/hooks";
+  import { useAppDispatch, useAppSelector, useMobile } from "../../../app/hooks";
   import {
     setDepartDate,
     setDestination,
@@ -22,13 +20,11 @@ import {
     submitSearch,
   } from "../searchSlice";
   import AirportAutocomplete from "./AirportAutocomplete";
-  
-  const AUTO_SEARCH_DEBOUNCE_MS = 350;
+  import { AUTO_SEARCH_DEBOUNCE_MS } from "../../../constants";
   
   export default function SearchForm() {
     const dispatch = useAppDispatch();
-    const theme = useTheme();
-    const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+    const isMobile = useMobile("sm");
     const { origin, destination, departDate, returnDate, sort } = useAppSelector((s) => s.search);
   
     // Don't search automatically when the page first loads

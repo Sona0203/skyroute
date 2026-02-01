@@ -1,4 +1,4 @@
-import { Box, Chip, Paper, Stack, Tooltip, Typography, Divider, Collapse, IconButton, useMediaQuery, useTheme, alpha } from "@mui/material";
+import { Box, Chip, Paper, Stack, Tooltip, Typography, Divider, Collapse, IconButton, useTheme, alpha } from "@mui/material";
 import { memo, useState } from "react";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import FlightTakeoffIcon from "@mui/icons-material/FlightTakeoff";
@@ -6,6 +6,7 @@ import FlightLandIcon from "@mui/icons-material/FlightLand";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import type { FlightOffer, FlightLeg } from "../types";
 import { getAirlineLogo } from "../utils";
+import { useMobile } from "../../../app/hooks";
 
 function fmtTime(iso: string) {
   return iso ? iso.slice(11, 16) : "—";
@@ -128,7 +129,7 @@ function LegRow({ title, leg }: { title: "Outbound" | "Return"; leg: FlightLeg }
   const from = chain[0] ?? "—";
   const to = chain[chain.length - 1] ?? "—";
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const isMobile = useMobile("md");
 
   return (
     <Box
@@ -242,7 +243,7 @@ function LegRow({ title, leg }: { title: "Outbound" | "Return"; leg: FlightLeg }
 
 function FlightCard({ f, badges }: { f: FlightOffer; allFlights: FlightOffer[]; badges: Array<"cheapest" | "fastest" | "best"> }) {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const isMobile = useMobile("md");
   const [expanded, setExpanded] = useState(false);
   const out = f.legs[0];
   const ret = f.legs[1];

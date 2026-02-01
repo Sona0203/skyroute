@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useGetFlightOffersPaginatedQuery } from "../flightsApi";
 import type { FlightOffer } from "../types";
-
-const PAGE_SIZE = 10;
+import { PAGE_SIZE } from "../../../constants";
 
 export function useInfiniteFlights(
   query: { origin: string; destination: string; departDate: string; returnDate?: string } | null
@@ -15,9 +14,16 @@ export function useInfiniteFlights(
     ? `${query.origin}-${query.destination}-${query.departDate}-${query.returnDate || ""}`
     : "";
 
-  // Reset page when query changes
+  // Track if query changed to show loading state
+  const queryChangedRef = useRef(false);
+  const previousQueryKeyRef = useRef<string>("");
+
+  // Reset page when query changes and track the change
   useEffect(() => {
-    if (currentQueryKey !== queryKeyRef.current) {
+    if (currentQueryKey !== queryKeyRef.current && currentQueryKey !== "") {
+      // Query changed - mark it and reset page
+      queryChangedRef.current = true;
+      previousQueryKeyRef.current = queryKeyRef.current;
       queryKeyRef.current = currentQueryKey;
       setPage(1);
     }
@@ -35,17 +41,28 @@ export function useInfiniteFlights(
     { skip: !query }
   );
 
+  // Reset query changed flag when data arrives
+  useEffect(() => {
+    if (data && !isFetching && queryChangedRef.current) {
+      queryChangedRef.current = false;
+    }
+  }, [data, isFetching]);
+
   const loadMore = () => {
     if (data?.hasMore && !isFetching && !isLoading) {
       setPage((prev) => prev + 1);
     }
   };
 
+  // Show loading when: initial load, query changed and fetching, or fetching first page
+  const isInitialLoading = (isLoading || isFetching) && page === 1;
+  const showLoading = isInitialLoading || (queryChangedRef.current && (isFetching || isLoading));
+
   return {
     flights: (data?.flights ?? []) as FlightOffer[],
     total: data?.total ?? 0,
     hasMore: data?.hasMore ?? false,
-    isLoading: isLoading && page === 1,
+    isLoading: showLoading,
     isLoadingMore: isFetching && page > 1,
     error,
     loadMore,

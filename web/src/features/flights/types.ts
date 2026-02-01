@@ -1,0 +1,39 @@
+export type AirportOption = {
+    id: string;
+    iataCode: string;
+    label: string; // "EVN — Yerevan, Armenia"
+  };
+  
+  export type FlightLeg = {
+    stopsCount: number;
+    departureDateTime: string;
+    arrivalDateTime: string;
+    durationMinutes: number;
+  
+    segments: Array<{
+      from: string;
+      to: string;
+      departAt: string;
+      arriveAt: string;
+      carrier: string;
+      flightNumber: string;
+    }>;
+  };
+  
+  export type FlightOffer = {
+    id: string;
+    priceTotal: number;
+    currency: string;
+  
+    validatingAirline: string;
+    legs: FlightLeg[]; // 1 = one-way, 2 = round-trip
+  };
+  
+  export type ChartPoint = {
+    t: string;
+    median: number;
+    min: number;
+    max: number;
+  };
+  
+  

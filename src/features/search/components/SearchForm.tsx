@@ -284,12 +284,18 @@ import SearchIcon from "@mui/icons-material/Search";
               label="Travelers"
               value={travelers}
               onChange={(e) => {
-                const value = parseInt(e.target.value, 10);
-                if (!isNaN(value) && value >= 1 && value <= 9) {
+                const inputValue = e.target.value;
+                // Allow empty string temporarily while typing
+                if (inputValue === "") {
+                  return;
+                }
+                const value = parseInt(inputValue, 10);
+                // Always dispatch - the reducer will clamp the value between 1-9
+                if (!isNaN(value)) {
                   dispatch(setTravelers(value));
                 }
               }}
-              inputProps={{ min: 1, max: 9 }}
+              inputProps={{ min: 1, max: 9, step: 1 }}
               size="medium"
               fullWidth
               sx={{

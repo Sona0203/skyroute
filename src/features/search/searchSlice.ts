@@ -37,6 +37,7 @@ const initialState: SearchState = {
     },
     sort: stored.sort ?? "price",
     submittedQuery: null,
+    datesWithNoFlights: stored.datesWithNoFlights ?? [],
   };
   
 
@@ -46,9 +47,13 @@ const slice = createSlice({
   reducers: {
     setOrigin(state, action: PayloadAction<string>) {
       state.origin = action.payload.toUpperCase();
+      // Clear dates with no flights when origin changes (different route = different availability)
+      state.datesWithNoFlights = [];
     },
     setDestination(state, action: PayloadAction<string>) {
       state.destination = action.payload.toUpperCase();
+      // Clear dates with no flights when destination changes
+      state.datesWithNoFlights = [];
     },
     swapRoute(state) {
         const prevOrigin = state.origin;
@@ -115,8 +120,14 @@ const slice = createSlice({
         };
       },
     clearSubmittedSearch(state) {
-        state.submittedQuery = null;
-      },
+      state.submittedQuery = null;
+    },
+    markDateAsNoFlights(state, action: PayloadAction<string>) {
+      // Mark a date as having no flights (date in YYYY-MM-DD format)
+      if (!state.datesWithNoFlights.includes(action.payload)) {
+        state.datesWithNoFlights.push(action.payload);
+      }
+    },
     },
 });
 
@@ -131,6 +142,7 @@ export const saveSearchToStorage = (state: SearchState) => {
       tripType: state.tripType,
       filters: state.filters,
       sort: state.sort,
+      datesWithNoFlights: state.datesWithNoFlights,
     };
     localStorage.setItem("skyroute_search", JSON.stringify(toSave));
   } catch {
@@ -152,6 +164,7 @@ export const {
   setSort,
   submitSearch,
   clearSubmittedSearch,
+  markDateAsNoFlights,
 } = slice.actions;
 
 export default slice.reducer;

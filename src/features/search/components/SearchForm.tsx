@@ -13,9 +13,13 @@ import {
     FormControl,
     FormLabel,
   } from "@mui/material";
+  import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+  import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+  import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
   import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
   import ClearIcon from "@mui/icons-material/Clear";
-  import { useEffect, useRef } from "react";
+  import { useEffect, useRef, useState } from "react";
+  import { parseISO, isValid, format } from "date-fns";
   import { useAppDispatch, useAppSelector, useMobile } from "../../../app/hooks";
   import {
     setDepartDate,
@@ -33,7 +37,9 @@ import {
   export default function SearchForm() {
     const dispatch = useAppDispatch();
     const isMobile = useMobile("sm");
-    const { origin, destination, departDate, returnDate, sort, tripType } = useAppSelector((s) => s.search);
+    const { origin, destination, departDate, returnDate, sort, tripType, datesWithNoFlights } = useAppSelector((s) => s.search);
+    const [departPickerOpen, setDepartPickerOpen] = useState(false);
+    const [returnPickerOpen, setReturnPickerOpen] = useState(false);
   
     // Don't search automatically when the page first loads
     const didMountRef = useRef(false);
@@ -177,55 +183,110 @@ import {
               </RadioGroup>
             </FormControl>
   
-            <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
-              <TextField
-                label="Departure"
-                type="date"
-                value={departDate}
-                onChange={(e) => dispatch(setDepartDate(e.target.value))}
-                InputLabelProps={{ shrink: true }}
-                fullWidth
-                sx={{
-                  "& .MuiInputBase-root": {
-                    minHeight: { xs: 56, sm: 48 }, // Larger touch target on mobile
-                  }
-                }}
-              />
-  
-              {tripType === "round-trip" && (
-                <TextField
-                  label="Return"
-                  type="date"
-                  value={returnDate ?? ""}
-                  onChange={(e) => dispatch(setReturnDate(e.target.value || undefined))}
-                  InputLabelProps={{ shrink: true }}
-                  fullWidth
-                  InputProps={{
-                    endAdornment: returnDate ? (
-                      <InputAdornment position="end">
-                        <IconButton
-                          aria-label="Clear return date"
-                          onClick={() => dispatch(setReturnDate(undefined))}
-                          edge="end"
-                          size="small"
-                          sx={{
-                            mr: { xs: -1, sm: -0.5 },
-                            "&:hover": {
-                              bgcolor: "action.hover",
-                            }
-                          }}
-                        >
-                          <ClearIcon fontSize="small" />
-                        </IconButton>
-                      </InputAdornment>
-                    ) : undefined,
-                    sx: {
-                      minHeight: { xs: 56, sm: 48 }, // Larger touch target on mobile
+            <LocalizationProvider dateAdapter={AdapterDateFns}>
+              <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
+                <DatePicker
+                  label="Departure"
+                  format="dd/MM/yyyy"
+                  open={departPickerOpen}
+                  onOpen={() => setDepartPickerOpen(true)}
+                  onClose={() => setDepartPickerOpen(false)}
+                  value={departDate ? parseISO(departDate + "T00:00:00") : null}
+                  onChange={(newValue) => {
+                    if (newValue && isValid(newValue)) {
+                      dispatch(setDepartDate(format(newValue, "yyyy-MM-dd")));
+                      setDepartPickerOpen(false);
+                    }
+                  }}
+                  shouldDisableDate={(date) => {
+                    const dateStr = format(date, "yyyy-MM-dd");
+                    return datesWithNoFlights.includes(dateStr);
+                  }}
+                  slotProps={{
+                    textField: {
+                      fullWidth: true,
+                      InputLabelProps: { shrink: true },
+                      onClick: () => setDepartPickerOpen(true),
+                      InputProps: {
+                        readOnly: true,
+                      },
+                      sx: {
+                        "& .MuiInputBase-root": {
+                          minHeight: { xs: 56, sm: 48 },
+                          cursor: "pointer",
+                        },
+                        "& input": {
+                          cursor: "pointer",
+                        }
+                      }
                     }
                   }}
                 />
-              )}
-            </Stack>
+  
+                {tripType === "round-trip" && (
+                  <DatePicker
+                    label="Return"
+                    format="dd/MM/yyyy"
+                    open={returnPickerOpen}
+                    onOpen={() => setReturnPickerOpen(true)}
+                    onClose={() => setReturnPickerOpen(false)}
+                    value={returnDate ? parseISO(returnDate + "T00:00:00") : null}
+                    onChange={(newValue) => {
+                      if (newValue && isValid(newValue)) {
+                        dispatch(setReturnDate(format(newValue, "yyyy-MM-dd")));
+                        setReturnPickerOpen(false);
+                      } else {
+                        dispatch(setReturnDate(undefined));
+                      }
+                    }}
+                    shouldDisableDate={(date) => {
+                      const dateStr = format(date, "yyyy-MM-dd");
+                      return datesWithNoFlights.includes(dateStr);
+                    }}
+                    slotProps={{
+                      textField: {
+                        fullWidth: true,
+                        InputLabelProps: { shrink: true },
+                        onClick: () => setReturnPickerOpen(true),
+                        InputProps: {
+                          readOnly: true,
+                          endAdornment: returnDate ? (
+                            <InputAdornment position="end">
+                              <IconButton
+                                aria-label="Clear return date"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  dispatch(setReturnDate(undefined));
+                                }}
+                                edge="end"
+                                size="small"
+                                sx={{
+                                  mr: { xs: -1, sm: -0.5 },
+                                  "&:hover": {
+                                    bgcolor: "action.hover",
+                                  }
+                                }}
+                              >
+                                <ClearIcon fontSize="small" />
+                              </IconButton>
+                            </InputAdornment>
+                          ) : undefined,
+                        },
+                        sx: {
+                          "& .MuiInputBase-root": {
+                            minHeight: { xs: 56, sm: 48 },
+                            cursor: "pointer",
+                          },
+                          "& input": {
+                            cursor: "pointer",
+                          }
+                        }
+                      }
+                    }}
+                  />
+                )}
+              </Stack>
+            </LocalizationProvider>
           </Stack>
         </CardContent>
       </Card>

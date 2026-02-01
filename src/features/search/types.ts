@@ -19,6 +19,7 @@ export type SearchState = {
     };
   
     sort: "price" | "duration" | "bestValue";
+    datesWithNoFlights: string[]; // Dates (YYYY-MM-DD) that returned no flights for current route
 };
 
 export type SubmittedQuery = {

@@ -252,15 +252,20 @@ function FlightCard({ f, badges }: { f: FlightOffer; allFlights: FlightOffer[]; 
     <Paper
       variant="outlined"
       sx={{
-        p: { xs: 2, sm: 2.5 },
+        pt: { xs: 2.5, sm: 3 },
+        px: { xs: 2, sm: 2.5 },
+        pb: { xs: 2, sm: 2.5 },
         borderRadius: { xs: 2, sm: 3 },
-        border: `1px solid ${alpha(theme.palette.divider, 0.5)}`,
-        transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+        border: `1px solid ${alpha(theme.palette.divider, 0.2)}`,
+        transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
         position: "relative",
-        overflow: "hidden",
+        cursor: "pointer",
+        bgcolor: "background.paper",
         "&:hover": {
-          transform: isMobile ? "none" : "translateY(-4px)",
-          boxShadow: isMobile ? theme.shadows[2] : theme.shadows[8],
+          transform: isMobile ? "none" : "translateY(-2px)",
+          boxShadow: isMobile 
+            ? `0 4px 12px ${alpha(theme.palette.common.black, 0.1)}`
+            : `0 6px 20px ${alpha(theme.palette.common.black, 0.12)}`,
           borderColor: alpha(theme.palette.primary.main, 0.3),
         },
       }}

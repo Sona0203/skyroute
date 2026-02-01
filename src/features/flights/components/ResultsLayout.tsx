@@ -1,7 +1,8 @@
 import { Box, Drawer, IconButton, Stack } from "@mui/material";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import { useMemo, useState, useEffect, useRef } from "react";
-import { useAppSelector, useMobile } from "../../../app/hooks";
+import { useAppDispatch, useAppSelector, useMobile } from "../../../app/hooks";
+import { markDateAsNoFlights } from "../../search/searchSlice";
 import {
   makeSelectAvailableAirlines,
   makeSelectChartSeries,
@@ -19,6 +20,7 @@ import SkeletonCard from "./SkeletonCard";
 import SearchSummaryBar from "./SearchSummaryBar";
 
 export default function ResultsLayout() {
+  const dispatch = useAppDispatch();
   const isMobile = useMobile("md");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const resultsRef = useRef<HTMLDivElement>(null);
@@ -116,6 +118,16 @@ export default function ResultsLayout() {
 
   // User searched but we didn't find any flights
   if (!flights || flights.length === 0) {
+    // Mark the submitted date(s) as having no flights
+    if (submittedQuery) {
+      if (submittedQuery.departDate) {
+        dispatch(markDateAsNoFlights(submittedQuery.departDate));
+      }
+      if (submittedQuery.returnDate) {
+        dispatch(markDateAsNoFlights(submittedQuery.returnDate));
+      }
+    }
+    
     return (
       <>
         <SearchSummaryBar flightCount={0} />

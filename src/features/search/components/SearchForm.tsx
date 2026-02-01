@@ -7,6 +7,11 @@ import {
     TextField,
     Typography,
     InputAdornment,
+    RadioGroup,
+    FormControlLabel,
+    Radio,
+    FormControl,
+    FormLabel,
   } from "@mui/material";
   import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
   import ClearIcon from "@mui/icons-material/Clear";
@@ -17,6 +22,7 @@ import {
     setDestination,
     setOrigin,
     setReturnDate,
+    setTripType,
     setSort,
     swapRoute,
     submitSearch,
@@ -27,7 +33,7 @@ import {
   export default function SearchForm() {
     const dispatch = useAppDispatch();
     const isMobile = useMobile("sm");
-    const { origin, destination, departDate, returnDate, sort } = useAppSelector((s) => s.search);
+    const { origin, destination, departDate, returnDate, sort, tripType } = useAppSelector((s) => s.search);
   
     // Don't search automatically when the page first loads
     const didMountRef = useRef(false);
@@ -62,7 +68,7 @@ import {
     return () => {
       if (tRef.current) window.clearTimeout(tRef.current);
     };
-  }, [origin, destination, departDate, returnDate, canSearch, dispatch]);
+  }, [origin, destination, departDate, returnDate, tripType, canSearch, dispatch]);
 
   // Let users press Enter to search
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -148,6 +154,28 @@ import {
                 />
               </Stack>
             </Stack>
+
+            {/* Trip type selection */}
+            <FormControl component="fieldset">
+              <FormLabel component="legend" sx={{ mb: 1 }}>Trip Type</FormLabel>
+              <RadioGroup
+                row
+                value={tripType}
+                onChange={(e) => dispatch(setTripType(e.target.value as "one-way" | "round-trip"))}
+                sx={{ gap: { xs: 2, sm: 3 } }}
+              >
+                <FormControlLabel
+                  value="one-way"
+                  control={<Radio size={isMobile ? "medium" : "small"} />}
+                  label={<Typography sx={{ fontSize: { xs: "0.9rem", sm: "0.875rem" } }}>One-way</Typography>}
+                />
+                <FormControlLabel
+                  value="round-trip"
+                  control={<Radio size={isMobile ? "medium" : "small"} />}
+                  label={<Typography sx={{ fontSize: { xs: "0.9rem", sm: "0.875rem" } }}>Round-trip</Typography>}
+                />
+              </RadioGroup>
+            </FormControl>
   
             <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
               <TextField
@@ -164,37 +192,39 @@ import {
                 }}
               />
   
-              <TextField
-                label="Return (optional)"
-                type="date"
-                value={returnDate ?? ""}
-                onChange={(e) => dispatch(setReturnDate(e.target.value || undefined))}
-                InputLabelProps={{ shrink: true }}
-                fullWidth
-                InputProps={{
-                  endAdornment: returnDate ? (
-                    <InputAdornment position="end">
-                      <IconButton
-                        aria-label="Clear return date"
-                        onClick={() => dispatch(setReturnDate(undefined))}
-                        edge="end"
-                        size="small"
-                        sx={{
-                          mr: { xs: -1, sm: -0.5 },
-                          "&:hover": {
-                            bgcolor: "action.hover",
-                          }
-                        }}
-                      >
-                        <ClearIcon fontSize="small" />
-                      </IconButton>
-                    </InputAdornment>
-                  ) : undefined,
-                  sx: {
-                    minHeight: { xs: 56, sm: 48 }, // Larger touch target on mobile
-                  }
-                }}
-              />
+              {tripType === "round-trip" && (
+                <TextField
+                  label="Return"
+                  type="date"
+                  value={returnDate ?? ""}
+                  onChange={(e) => dispatch(setReturnDate(e.target.value || undefined))}
+                  InputLabelProps={{ shrink: true }}
+                  fullWidth
+                  InputProps={{
+                    endAdornment: returnDate ? (
+                      <InputAdornment position="end">
+                        <IconButton
+                          aria-label="Clear return date"
+                          onClick={() => dispatch(setReturnDate(undefined))}
+                          edge="end"
+                          size="small"
+                          sx={{
+                            mr: { xs: -1, sm: -0.5 },
+                            "&:hover": {
+                              bgcolor: "action.hover",
+                            }
+                          }}
+                        >
+                          <ClearIcon fontSize="small" />
+                        </IconButton>
+                      </InputAdornment>
+                    ) : undefined,
+                    sx: {
+                      minHeight: { xs: 56, sm: 48 }, // Larger touch target on mobile
+                    }
+                  }}
+                />
+              )}
             </Stack>
           </Stack>
         </CardContent>

@@ -1,6 +1,6 @@
 import { createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
-import type { SearchState, StopsFilter } from "./types";
+import type { SearchState, StopsFilter, TripType } from "./types";
 
 const today = new Date().toISOString().slice(0, 10);
 
@@ -28,6 +28,7 @@ const initialState: SearchState = {
     destination: stored.destination ?? "",
     departDate: stored.departDate ?? today,
     returnDate: stored.returnDate,
+    tripType: stored.tripType ?? "one-way",
     filters: {
       stops: stored.filters?.stops ?? "any",
       airlines: stored.filters?.airlines ?? [],
@@ -71,6 +72,13 @@ const slice = createSlice({
     setReturnDate(state, action: PayloadAction<string | undefined>) {
       state.returnDate = action.payload;
     },
+    setTripType(state, action: PayloadAction<TripType>) {
+      state.tripType = action.payload;
+      // Clear return date if switching to one-way
+      if (action.payload === "one-way") {
+        state.returnDate = undefined;
+      }
+    },
 
     setStopsFilter(state, action: PayloadAction<StopsFilter>) {
       state.filters.stops = action.payload;
@@ -103,7 +111,7 @@ const slice = createSlice({
           origin: state.origin,
           destination: state.destination,
           departDate: state.departDate,
-          returnDate: state.returnDate,
+          returnDate: state.tripType === "round-trip" ? state.returnDate : undefined,
         };
       },
     clearSubmittedSearch(state) {
@@ -120,6 +128,7 @@ export const saveSearchToStorage = (state: SearchState) => {
       destination: state.destination,
       departDate: state.departDate,
       returnDate: state.returnDate,
+      tripType: state.tripType,
       filters: state.filters,
       sort: state.sort,
     };
@@ -135,6 +144,7 @@ export const {
   swapRoute,
   setDepartDate,
   setReturnDate,
+  setTripType,
   setStopsFilter,
   toggleAirline,
   setPriceRange,

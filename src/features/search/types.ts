@@ -1,10 +1,13 @@
 export type StopsFilter = "any" | "0" | "1" | "2+";
 
+export type TripType = "one-way" | "round-trip";
+
 export type SearchState = {
     origin: string;
     destination: string;
     departDate: string;
     returnDate?: string;
+    tripType: TripType;
   
     submittedQuery: SubmittedQuery;
   

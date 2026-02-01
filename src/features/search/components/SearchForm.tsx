@@ -6,8 +6,10 @@ import {
     Stack,
     TextField,
     Typography,
+    InputAdornment,
   } from "@mui/material";
   import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
+  import ClearIcon from "@mui/icons-material/Clear";
   import { useEffect, useRef } from "react";
   import { useAppDispatch, useAppSelector, useMobile } from "../../../app/hooks";
   import {
@@ -169,8 +171,26 @@ import {
                 onChange={(e) => dispatch(setReturnDate(e.target.value || undefined))}
                 InputLabelProps={{ shrink: true }}
                 fullWidth
-                sx={{
-                  "& .MuiInputBase-root": {
+                InputProps={{
+                  endAdornment: returnDate ? (
+                    <InputAdornment position="end">
+                      <IconButton
+                        aria-label="Clear return date"
+                        onClick={() => dispatch(setReturnDate(undefined))}
+                        edge="end"
+                        size="small"
+                        sx={{
+                          mr: { xs: -1, sm: -0.5 },
+                          "&:hover": {
+                            bgcolor: "action.hover",
+                          }
+                        }}
+                      >
+                        <ClearIcon fontSize="small" />
+                      </IconButton>
+                    </InputAdornment>
+                  ) : undefined,
+                  sx: {
                     minHeight: { xs: 56, sm: 48 }, // Larger touch target on mobile
                   }
                 }}

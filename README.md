@@ -17,8 +17,6 @@ A modern flight search application built with React, TypeScript, and the Amadeus
 - **Active Filter Chips** - See and remove active filters at a glance
 - **Sticky Search Summary** - Always see your search route and dates
 - **Skeleton Loading** - Smooth loading states while fetching results
-- **Virtualized List** - Efficient rendering of large result sets with react-window
-- **Infinite Scroll** - Automatically load more results as you scroll (10 items per page)
 - **Mobile Responsive** - Expandable flight details on mobile devices
 - **Dark Mode** - Toggle between light and dark themes with persistence
 - **Keyboard Shortcuts** - Press Enter to search, Esc to close drawers
@@ -31,25 +29,20 @@ A modern flight search application built with React, TypeScript, and the Amadeus
 - Smooth animations and transitions
 - Responsive layout for all screen sizes
 - Accessible components with proper ARIA labels
-- Beautiful flight cards with clear visual hierarchy
 
 ## Tech Stack
 
-### Frontend (`web/`)
+### Frontend
 - **React 18** - UI library
 - **TypeScript** - Type safety
 - **Vite** - Build tool and dev server
 - **Material-UI (MUI)** - Component library
 - **Redux Toolkit** - State management
-- **RTK Query** - Data fetching and caching with pagination support
-- **Recharts** - Chart visualizations with animations
-- **react-window** - Virtualization for efficient list rendering
+- **RTK Query** - Data fetching and caching
+- **Recharts** - Chart visualizations
 
-### Backend (`server/`)
-- **Node.js** - Runtime
-- **Express** - Web framework
-- **TypeScript** - Type safety
-- **Amadeus API** - Flight data provider
+### API Integration
+- **Amadeus API** - Direct integration from frontend (OAuth token management handled client-side)
 
 ## Getting Started
 
@@ -66,96 +59,61 @@ A modern flight search application built with React, TypeScript, and the Amadeus
    cd skyroute
    ```
 
-2. **Set up the backend**
+2. **Install dependencies**
    ```bash
-   cd server
    npm install
    ```
 
 3. **Configure environment variables**
    
-   Create a `.env` file in the `server/` directory:
+   Create a `.env` file in the project root:
    ```env
-   PORT=3001
-   CORS_ORIGIN=http://localhost:5173
-   AMADEUS_CLIENT_ID=your_client_id
-   AMADEUS_CLIENT_SECRET=your_client_secret
-   AMADEUS_BASE_URL=https://test.api.amadeus.com
-   MOCK_MODE=0
+   VITE_AMADEUS_CLIENT_ID=your_client_id
+   VITE_AMADEUS_CLIENT_SECRET=your_client_secret
+   VITE_AMADEUS_BASE_URL=https://test.api.amadeus.com
    ```
 
-   For testing without API credentials, set `MOCK_MODE=1`
-
-4. **Set up the frontend**
-   ```bash
-   cd ../web
-   npm install
-   ```
-
-5. **Configure frontend environment**
-   
-   Create a `.env` file in the `web/` directory:
-   ```env
-   VITE_API_BASE_URL=http://localhost:3001
-   ```
+   **Note**: For production, consider using environment variables or a backend proxy to keep credentials secure. For development and testing, this setup works fine.
 
 ### Running the Application
 
-1. **Start the backend server**
-   ```bash
-   cd server
-   npm run dev
-   ```
-   The server will run on `http://localhost:3001`
+**Start the dev server**
+```bash
+npm run dev
+```
+The app will be available at `http://localhost:5173`
 
-2. **Start the frontend dev server**
-   ```bash
-   cd web
-   npm run dev
-   ```
-   The app will be available at `http://localhost:5173`
+The application calls the Amadeus API directly from the browser. Make sure you have your Amadeus credentials configured in the `.env` file.
 
 ### Building for Production
 
-**Backend:**
 ```bash
-cd server
 npm run build
-npm start
 ```
+The production build will be in `dist/`
 
-**Frontend:**
-```bash
-cd web
-npm run build
-```
-The production build will be in `web/dist/`
+**Security Note**: In production, consider using a backend proxy to keep API credentials secure. For development, direct API calls work fine.
 
 ## Project Structure
 
 ```
 skyroute/
-├── server/                 # Backend API server
-│   ├── src/
-│   │   ├── index.ts      # Express server setup
-│   │   └── amadeus.ts     # Amadeus API integration
-│   └── package.json
-│
-├── web/                    # Frontend React application
-│   ├── src/
-│   │   ├── app/           # Redux store and hooks
-│   │   ├── components/    # Shared components
-│   │   ├── features/      # Feature modules
-│   │   │   ├── flights/   # Flight search and display
-│   │   │   │   ├── components/
-│   │   │   │   │   ├── VirtualizedFlightList.tsx  # Virtualized list with infinite scroll
-│   │   │   │   │   └── ...
-│   │   │   │   └── hooks/
-│   │   │   │       └── useInfiniteFlights.ts  # Infinite scroll hook
-│   │   │   └── search/    # Search form and state
-│   │   └── theme/         # Theme configuration
-│   └── package.json
-│
+├── src/
+│   ├── app/               # Redux store and hooks
+│   ├── components/        # Shared components
+│   ├── features/          # Feature modules
+│   │   ├── flights/       # Flight search and display
+│   │   │   ├── components/
+│   │   │   │   ├── VirtualizedFlightList.tsx  # Virtualized list with infinite scroll
+│   │   │   │   └── ...
+│   │   │   └── hooks/
+│   │   │       └── useInfiniteFlights.ts  # Infinite scroll hook
+│   │   └── search/        # Search form and state
+│   ├── services/          # External API services
+│   │   └── amadeus.ts     # Amadeus API client
+│   └── theme/             # Theme configuration
+├── public/                 # Static assets
+├── package.json
 └── README.md
 ```
 
@@ -175,31 +133,20 @@ skyroute/
 - Visualizes price changes by departure hour
 - Shows min, median, and max prices
 - Provides insights like "Prices drop 15% by end of day"
-- Animated charts with smooth transitions
 
 ### Badges
 - **Cheapest**: Lowest price in results
 - **Fastest**: Shortest duration in results
 - **Best**: Both cheapest and fastest
 
-### Performance Optimizations
-- **Virtualization**: Only renders visible flight cards using react-window
-- **Infinite Scroll**: Loads 10 flights at a time as you scroll
-- **Pagination**: Efficient data loading with RTK Query
-- **Memoization**: Optimized selectors and components
-
 ## Environment Variables
 
-### Server
-- `PORT` - Server port (default: 3001)
-- `CORS_ORIGIN` - Allowed CORS origin (default: http://localhost:5173)
-- `AMADEUS_CLIENT_ID` - Your Amadeus API client ID
-- `AMADEUS_CLIENT_SECRET` - Your Amadeus API client secret
-- `AMADEUS_BASE_URL` - Amadeus API base URL (default: test API)
-- `MOCK_MODE` - Use mock data instead of API (1 = enabled, 0 = disabled)
+### `.env` file in project root
+- `VITE_AMADEUS_CLIENT_ID` - Your Amadeus API client ID (required)
+- `VITE_AMADEUS_CLIENT_SECRET` - Your Amadeus API client secret (required)
+- `VITE_AMADEUS_BASE_URL` - Amadeus API base URL (default: https://test.api.amadeus.com)
 
-### Web
-- `VITE_API_BASE_URL` - Backend API URL (default: http://localhost:3001)
+**Security Note**: These credentials will be visible in the browser. For production applications, consider using a backend proxy to keep credentials secure.
 
 ## Development
 
@@ -212,7 +159,6 @@ skyroute/
 - Redux Toolkit for global state
 - RTK Query for server state and caching
 - Local storage for search persistence
-- Pagination support with infinite scroll
 
 ### Styling
 - Material-UI components
@@ -220,21 +166,14 @@ skyroute/
 - Responsive design with breakpoints
 - Dark mode support
 
-## API Endpoints
+## API Integration
 
-### Backend (`/api/`)
-- `GET /health` - Health check endpoint
-- `GET /api/airports?q=<query>` - Airport autocomplete
-- `GET /api/flights/search?origin=<code>&destination=<code>&departDate=<date>&returnDate=<date>` - Flight search
+The application directly calls the Amadeus API:
 
-## Performance
+- **Airport Autocomplete**: `/v1/reference-data/locations` - Search for airports and cities
+- **Flight Search**: `/v2/shopping/flight-offers` - Search for flight offers
 
-The application uses several performance optimizations:
-- **Virtualization**: Only renders visible items in the flight list
-- **Pagination**: Loads 10 flights per page
-- **Infinite Scroll**: Automatically loads more as you scroll
-- **Memoization**: Cached selectors and components
-- **Debouncing**: Search requests are debounced to reduce API calls
+OAuth token management is handled automatically by the frontend service layer.
 
 ## Browser Support
 - Chrome (latest)

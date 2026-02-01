@@ -8,13 +8,14 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       <Header title="SkyRoute" />
 
       <Container
-  maxWidth="lg"
-  sx={{
-    py: { xs: 3, sm: 4 },
-  }}
->
-  {children}
-</Container>
+        maxWidth="lg"
+        sx={{
+          py: { xs: 2, sm: 3, md: 4 },
+          px: { xs: 2, sm: 3 },
+        }}
+      >
+        {children}
+      </Container>
 
     </Box>
   );

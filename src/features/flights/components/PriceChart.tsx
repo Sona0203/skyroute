@@ -40,10 +40,23 @@ export default function PriceChart({
   const insight = getPriceInsight();
 
   return (
-    <Paper variant="outlined" sx={{ p: 2, height: 280 }}>
+    <Paper 
+      variant="outlined" 
+      sx={{ 
+        p: { xs: 1.5, sm: 2 }, 
+        height: { xs: 240, sm: 280 },
+        borderRadius: { xs: 2, sm: 3 },
+      }}
+    >
       <Stack spacing={1} sx={{ height: "100%" }}>
         <Stack direction="row" justifyContent="space-between" alignItems="center">
-          <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>
+          <Typography 
+            variant="subtitle1" 
+            sx={{ 
+              fontWeight: 800,
+              fontSize: { xs: "0.95rem", sm: "1rem" }
+            }}
+          >
             Price trend (filtered)
           </Typography>
         </Stack>

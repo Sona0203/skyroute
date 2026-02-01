@@ -41,9 +41,24 @@ export default function ActiveFilters() {
   if (chips.length === 0) return null;
 
   return (
-    <Box sx={{ mb: 2 }}>
-      <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" gap={1}>
-        <Typography variant="caption" color="text.secondary" sx={{ mr: 0.5 }}>
+    <Box sx={{ mb: { xs: 1.5, sm: 2 } }}>
+      <Stack 
+        direction="row" 
+        spacing={{ xs: 0.75, sm: 1 }} 
+        alignItems="center" 
+        flexWrap="wrap" 
+        gap={{ xs: 0.75, sm: 1 }}
+      >
+        <Typography 
+          variant="caption" 
+          color="text.secondary" 
+          sx={{ 
+            mr: { xs: 0, sm: 0.5 },
+            fontSize: { xs: "0.7rem", sm: "0.75rem" },
+            width: { xs: "100%", sm: "auto" },
+            mb: { xs: 0.5, sm: 0 },
+          }}
+        >
           Active filters:
         </Typography>
         {chips.map((chip, idx) => (
@@ -53,7 +68,14 @@ export default function ActiveFilters() {
             label={chip.label}
             onDelete={chip.onDelete}
             variant="outlined"
-            sx={{ fontWeight: 600 }}
+            sx={{ 
+              fontWeight: 600,
+              fontSize: { xs: "0.7rem", sm: "0.75rem" },
+              height: { xs: 28, sm: 24 },
+              "& .MuiChip-deleteIcon": {
+                fontSize: { xs: "1rem", sm: "1.125rem" },
+              }
+            }}
           />
         ))}
         {chips.length > 1 && (
@@ -63,7 +85,11 @@ export default function ActiveFilters() {
             onClick={() => dispatch(clearFilters())}
             color="error"
             variant="outlined"
-            sx={{ fontWeight: 600 }}
+            sx={{ 
+              fontWeight: 600,
+              fontSize: { xs: "0.7rem", sm: "0.75rem" },
+              height: { xs: 28, sm: 24 },
+            }}
           />
         )}
       </Stack>

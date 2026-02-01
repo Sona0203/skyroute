@@ -6,6 +6,8 @@ import {
     Stack,
     TextField,
     Typography,
+    useMediaQuery,
+    useTheme,
   } from "@mui/material";
   import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
   import { useEffect, useRef } from "react";
@@ -25,6 +27,8 @@ import {
   
   export default function SearchForm() {
     const dispatch = useAppDispatch();
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
     const { origin, destination, departDate, returnDate, sort } = useAppSelector((s) => s.search);
   
     // Don't search automatically when the page first loads
@@ -71,22 +75,32 @@ import {
   };
   
   return (
-    <Card variant="outlined" onKeyDown={handleKeyDown}>
-      <CardContent>
-        <Stack spacing={2}>
-            <Stack direction="row" alignItems="baseline" justifyContent="space-between">
-              <Typography variant="h6" sx={{ fontWeight: 800 }}>
+    <Card variant="outlined" onKeyDown={handleKeyDown} sx={{ mb: { xs: 2, sm: 3 } }}>
+      <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+        <Stack spacing={{ xs: 2, sm: 2.5 }}>
+            <Stack 
+              direction={{ xs: "column", sm: "row" }} 
+              alignItems={{ xs: "flex-start", sm: "baseline" }} 
+              justifyContent="space-between"
+              spacing={{ xs: 1.5, sm: 2 }}
+            >
+              <Typography variant="h6" sx={{ fontWeight: 800, fontSize: { xs: "1.1rem", sm: "1.25rem" } }}>
                 Search flights
               </Typography>
   
-              <Stack direction="row" spacing={1} alignItems="center">
+              <Stack direction="row" spacing={1} alignItems="center" sx={{ width: { xs: "100%", sm: "auto" } }}>
                 <TextField
                   select
                   size="small"
                   label="Sort"
                   value={sort}
                   onChange={(e) => dispatch(setSort(e.target.value as any))}
-                  sx={{ minWidth: 160 }}
+                  sx={{ 
+                    minWidth: { xs: "100%", sm: 160 },
+                    "& .MuiInputBase-root": {
+                      minHeight: { xs: 48, sm: 40 }, // Larger touch target on mobile
+                    }
+                  }}
                 >
                   <MenuItem value="price">Lowest price</MenuItem>
                   <MenuItem value="duration">Shortest duration</MenuItem>
@@ -109,14 +123,22 @@ import {
                 />
               </Stack>
   
-              <Stack sx={{ alignItems: "center" }}>
+              <Stack sx={{ alignItems: "center", justifyContent: "center", minHeight: { xs: 56, md: "auto" } }}>
                 <IconButton
                   aria-label="Swap route"
                   disabled={!origin || !destination}
                   onClick={() => dispatch(swapRoute())}
-                  sx={{ border: "1px solid", borderColor: "divider" }}
+                  sx={{ 
+                    border: "1px solid", 
+                    borderColor: "divider",
+                    width: { xs: 48, sm: 40 },
+                    height: { xs: 48, sm: 40 },
+                    "&:hover": {
+                      bgcolor: "action.hover",
+                    }
+                  }}
                 >
-                  <SwapHorizIcon />
+                  <SwapHorizIcon fontSize={isMobile ? "medium" : "small"} />
                 </IconButton>
               </Stack>
   
@@ -137,6 +159,11 @@ import {
                 onChange={(e) => dispatch(setDepartDate(e.target.value))}
                 InputLabelProps={{ shrink: true }}
                 fullWidth
+                sx={{
+                  "& .MuiInputBase-root": {
+                    minHeight: { xs: 56, sm: 48 }, // Larger touch target on mobile
+                  }
+                }}
               />
   
               <TextField
@@ -146,6 +173,11 @@ import {
                 onChange={(e) => dispatch(setReturnDate(e.target.value || undefined))}
                 InputLabelProps={{ shrink: true }}
                 fullWidth
+                sx={{
+                  "& .MuiInputBase-root": {
+                    minHeight: { xs: 56, sm: 48 }, // Larger touch target on mobile
+                  }
+                }}
               />
             </Stack>
           </Stack>

@@ -27,17 +27,36 @@ export default function SearchSummaryBar({ flightCount = 0 }: Props) {
       }}
     >
       <Container maxWidth="lg" disableGutters>
-        <Box sx={{ px: { xs: 2, sm: 3 }, py: 1.5 }}>
-          <Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap">
-            <Typography variant="body2" sx={{ fontWeight: 700 }}>
+        <Box sx={{ px: { xs: 2, sm: 3 }, py: { xs: 1.25, sm: 1.5 } }}>
+          <Stack 
+            direction={{ xs: "column", sm: "row" }} 
+            spacing={{ xs: 0.75, sm: 2 }} 
+            alignItems={{ xs: "flex-start", sm: "center" }}
+            flexWrap="wrap"
+          >
+            <Typography 
+              variant="body2" 
+              sx={{ 
+                fontWeight: 700,
+                fontSize: { xs: "0.8rem", sm: "0.875rem" }
+              }}
+            >
               {submittedQuery.origin} → {submittedQuery.destination}
             </Typography>
-            <Typography variant="caption" color="text.secondary">
+            <Typography 
+              variant="caption" 
+              color="text.secondary"
+              sx={{ fontSize: { xs: "0.75rem", sm: "0.75rem" } }}
+            >
               {submittedQuery.departDate}
               {submittedQuery.returnDate && ` - ${submittedQuery.returnDate}`}
             </Typography>
             {flightCount > 0 && (
-              <Typography variant="caption" color="text.secondary">
+              <Typography 
+                variant="caption" 
+                color="text.secondary"
+                sx={{ fontSize: { xs: "0.75rem", sm: "0.75rem" } }}
+              >
                 • {flightCount} flights
               </Typography>
             )}

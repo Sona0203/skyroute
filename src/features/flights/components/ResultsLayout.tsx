@@ -133,13 +133,21 @@ export default function ResultsLayout({ flights: initialFlights, loading: initia
         {/* Mobile: Filters button + bottom drawer */}
         {isMobile && (
           <>
-            <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
+            <Box sx={{ display: "flex", justifyContent: "flex-end", mb: { xs: 1.5, sm: 2 } }}>
               <IconButton
                 onClick={() => setFiltersOpen(true)}
-                sx={{ border: "1px solid", borderColor: "divider" }}
+                sx={{ 
+                  border: "1px solid", 
+                  borderColor: "divider",
+                  width: { xs: 44, sm: 40 },
+                  height: { xs: 44, sm: 40 },
+                  "&:hover": {
+                    bgcolor: "action.hover",
+                  }
+                }}
                 aria-label="Open filters"
               >
-                <FilterListIcon />
+                <FilterListIcon fontSize={isMobile ? "medium" : "small"} />
               </IconButton>
             </Box>
 
@@ -148,7 +156,11 @@ export default function ResultsLayout({ flights: initialFlights, loading: initia
               open={filtersOpen}
               onClose={() => setFiltersOpen(false)}
               PaperProps={{
-                sx: { borderTopLeftRadius: 16, borderTopRightRadius: 16, maxHeight: "80vh" },
+                sx: { 
+                  borderTopLeftRadius: { xs: 20, sm: 16 }, 
+                  borderTopRightRadius: { xs: 20, sm: 16 }, 
+                  maxHeight: "85vh",
+                },
               }}
             >
               {filtersContent}
@@ -184,7 +196,7 @@ export default function ResultsLayout({ flights: initialFlights, loading: initia
           )}
 
           {/* Main content */}
-          <Stack spacing={3}>
+          <Stack spacing={{ xs: 2, sm: 3 }}>
             <ActiveFilters />
             {chartSeries.length > 0 && <PriceChart series={chartSeries} currency={currency} />}
 

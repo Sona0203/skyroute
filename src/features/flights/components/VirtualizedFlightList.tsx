@@ -1,12 +1,16 @@
-import { Box, Stack, Typography, CircularProgress } from "@mui/material";
+import { Box, Stack, Typography, CircularProgress, useMediaQuery, useTheme } from "@mui/material";
 import { VariableSizeList as List } from "react-window";
 import { useEffect, useRef, useCallback, useMemo } from "react";
 import type { FlightOffer } from "../types";
 import FlightCard from "./FlightCard";
 import { getFlightBadges } from "../utils";
 
-const BASE_ITEM_HEIGHT = 240; // Base height for one-way flights
+const BASE_ITEM_HEIGHT = 240; // Base height for one-way flights (desktop)
+const BASE_ITEM_HEIGHT_MOBILE = 550; // Base height for one-way flights (mobile - very generous to prevent overlap)
 const RETURN_FLIGHT_EXTRA_HEIGHT = 180; // Extra height for return flight
+const RETURN_FLIGHT_EXTRA_HEIGHT_MOBILE = 450; // Extra height for return flight (mobile - very generous)
+const CARD_SPACING_DESKTOP = 8; // Spacing between cards (desktop pb: 1 = 8px)
+const CARD_SPACING_MOBILE = 24; // Spacing between cards (mobile pb: 3 = 24px)
 
 type Props = {
   flights: FlightOffer[];
@@ -23,6 +27,8 @@ function VirtualizedFlightList({
   hasMore, 
   isLoadingMore 
 }: Props) {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const listRef = useRef<List>(null);
   const loadMoreTriggeredRef = useRef(false);
 
@@ -30,20 +36,34 @@ function VirtualizedFlightList({
   const listHeight = useMemo(() => {
     // Use viewport height minus space for header, search bar, and other UI elements
     const viewportHeight = typeof window !== "undefined" ? window.innerHeight : 800;
-    const availableHeight = Math.max(500, viewportHeight - 350); // Minimum 500px, or viewport minus UI space
+    // On mobile, we need more space for UI elements
+    const uiSpace = isMobile ? 400 : 350;
+    const availableHeight = Math.max(500, viewportHeight - uiSpace);
     
     return availableHeight;
-  }, []);
+  }, [isMobile]);
 
-  // Calculate item height based on whether it's round-trip
+  // Calculate item height based on whether it's round-trip and screen size
   const getItemSize = useCallback(
     (index: number) => {
       const flight = flights[index];
-      if (!flight) return BASE_ITEM_HEIGHT;
+      if (!flight) {
+        const spacing = isMobile ? CARD_SPACING_MOBILE : CARD_SPACING_DESKTOP;
+        return isMobile ? BASE_ITEM_HEIGHT_MOBILE + spacing : BASE_ITEM_HEIGHT + spacing;
+      }
+      
+      // Base height depends on screen size
+      const baseHeight = isMobile ? BASE_ITEM_HEIGHT_MOBILE : BASE_ITEM_HEIGHT;
+      const extraHeight = isMobile ? RETURN_FLIGHT_EXTRA_HEIGHT_MOBILE : RETURN_FLIGHT_EXTRA_HEIGHT;
+      const spacing = isMobile ? CARD_SPACING_MOBILE : CARD_SPACING_DESKTOP;
+      
       // Round-trip flights have 2 legs, so they need more height
-      return flight.legs.length > 1 ? BASE_ITEM_HEIGHT + RETURN_FLIGHT_EXTRA_HEIGHT : BASE_ITEM_HEIGHT;
+      const cardHeight = flight.legs.length > 1 ? baseHeight + extraHeight : baseHeight;
+      
+      // Add spacing between cards (included in the height so cards don't overlap)
+      return cardHeight + spacing;
     },
-    [flights]
+    [flights, isMobile]
   );
 
   // Handle scroll for infinite loading - trigger when near bottom
@@ -91,9 +111,25 @@ function VirtualizedFlightList({
       const badges = getFlightBadges(flight, allFlights);
 
       return (
-        <div style={style}>
-          <Box sx={{ px: 0.5, pb: 1 }}>
-            <FlightCard f={flight} allFlights={allFlights} badges={badges} />
+        <div 
+          style={{
+            ...style,
+            overflow: "hidden", // Prevent content from overflowing
+            boxSizing: "border-box",
+          }}
+        >
+          <Box sx={{ 
+            px: { xs: 0, sm: 0.5 }, 
+            pb: { xs: 3, sm: 1 }, // Spacing between cards
+            width: "100%",
+            height: "100%",
+            boxSizing: "border-box",
+            display: "flex",
+            flexDirection: "column",
+          }}>
+            <Box sx={{ flex: "0 0 auto" }}>
+              <FlightCard f={flight} allFlights={allFlights} badges={badges} />
+            </Box>
           </Box>
         </div>
       );
@@ -105,9 +141,88 @@ function VirtualizedFlightList({
     return null;
   }
 
+  // On mobile, use a simple scrollable list without virtualization to avoid overlap issues
+  if (isMobile) {
+    return (
+      <Stack spacing={{ xs: 1, sm: 1.5 }}>
+        <Typography 
+          variant="subtitle1" 
+          sx={{ 
+            fontWeight: 800,
+            fontSize: { xs: "0.95rem", sm: "1rem" },
+            px: { xs: 0.5, sm: 0 },
+          }}
+        >
+          Results ({allFlights.length})
+        </Typography>
+        <Box
+          sx={{
+            width: "100%",
+            maxHeight: listHeight,
+            overflowY: "auto",
+            px: { xs: 0.5, sm: 0 },
+            "&::-webkit-scrollbar": {
+              width: "8px",
+            },
+            "&::-webkit-scrollbar-track": {
+              background: "transparent",
+            },
+            "&::-webkit-scrollbar-thumb": {
+              background: "rgba(0,0,0,0.2)",
+              borderRadius: "4px",
+            },
+          }}
+          onScroll={(e) => {
+            const target = e.currentTarget;
+            const scrollBottom = target.scrollHeight - target.scrollTop - target.clientHeight;
+            if (scrollBottom < 300 && hasMore && !isLoadingMore && !loadMoreTriggeredRef.current) {
+              loadMoreTriggeredRef.current = true;
+              onLoadMore?.();
+              setTimeout(() => {
+                loadMoreTriggeredRef.current = false;
+              }, 1000);
+            }
+          }}
+        >
+          <Stack spacing={2}>
+            {flights.map((flight, index) => {
+              const badges = getFlightBadges(flight, allFlights);
+              return (
+                <Box key={flight.id} sx={{ px: { xs: 0, sm: 0.5 } }}>
+                  <FlightCard f={flight} allFlights={allFlights} badges={badges} />
+                </Box>
+              );
+            })}
+            {(hasMore || isLoadingMore) && (
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  py: 3,
+                  minHeight: 60,
+                }}
+              >
+                {isLoadingMore && <CircularProgress size={24} />}
+              </Box>
+            )}
+          </Stack>
+        </Box>
+      </Stack>
+    );
+  }
+
+  // Desktop: use virtualization
   return (
-    <Stack spacing={1.5}>
-      <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>
+    <Stack spacing={{ xs: 1, sm: 1.5 }}>
+      <Typography 
+        variant="subtitle1" 
+        sx={{ 
+          fontWeight: 800,
+          fontSize: { xs: "0.95rem", sm: "1rem" },
+          px: { xs: 0.5, sm: 0 },
+        }}
+      >
         Results ({allFlights.length})
       </Typography>
       <Box
@@ -115,6 +230,7 @@ function VirtualizedFlightList({
           width: "100%",
           height: listHeight,
           position: "relative",
+          px: { xs: 0.5, sm: 0 },
         }}
       >
         <List
@@ -123,7 +239,8 @@ function VirtualizedFlightList({
           itemCount={flights.length + (hasMore || isLoadingMore ? 1 : 0)}
           itemSize={(index) => {
             if (index >= flights.length) return 60; // Height for loading indicator
-            return getItemSize(index);
+            const size = getItemSize(index);
+            return size;
           }}
           width="100%"
           overscanCount={5}

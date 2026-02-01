@@ -128,17 +128,18 @@ function LegRow({ title, leg }: { title: "Outbound" | "Return"; leg: FlightLeg }
   const from = chain[0] ?? "—";
   const to = chain[chain.length - 1] ?? "—";
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
   return (
     <Box
       sx={{
-        p: 1.5,
-        borderRadius: 2,
+        p: { xs: 1.25, sm: 1.5 },
+        borderRadius: { xs: 1.5, sm: 2 },
         bgcolor: alpha(theme.palette.primary.main, 0.04),
         border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
       }}
     >
-      <Stack spacing={1.5}>
+      <Stack spacing={{ xs: 1.25, sm: 1.5 }}>
         {/* Route header */}
         <Stack direction="row" justifyContent="space-between" alignItems="center">
           <Chip 
@@ -154,15 +155,36 @@ function LegRow({ title, leg }: { title: "Outbound" | "Return"; leg: FlightLeg }
         </Stack>
 
         {/* Time and duration */}
-        <Stack direction="row" spacing={2} alignItems="center">
+        <Stack 
+          direction={{ xs: "column", sm: "row" }} 
+          spacing={{ xs: 1, sm: 2 }} 
+          alignItems={{ xs: "flex-start", sm: "center" }}
+        >
           <Stack direction="row" spacing={1} alignItems="center">
-            <FlightTakeoffIcon sx={{ fontSize: 18, color: "text.secondary" }} />
-            <Typography variant="h6" sx={{ fontWeight: 800, letterSpacing: 0.5 }}>
+            <FlightTakeoffIcon sx={{ fontSize: { xs: 16, sm: 18 }, color: "text.secondary" }} />
+            <Typography 
+              variant={isMobile ? "body1" : "h6"} 
+              sx={{ 
+                fontWeight: 800, 
+                letterSpacing: 0.5,
+                fontSize: { xs: "0.95rem", sm: "1.25rem" }
+              }}
+            >
               {fmtTime(leg.departureDateTime)}
             </Typography>
           </Stack>
           
-          <Box sx={{ flex: 1, position: "relative", height: 2, bgcolor: "divider", borderRadius: 1 }}>
+          <Box 
+            sx={{ 
+              flex: 1, 
+              position: "relative", 
+              height: { xs: 1.5, sm: 2 }, 
+              bgcolor: "divider", 
+              borderRadius: 1,
+              width: { xs: "100%", sm: "auto" },
+              display: { xs: isMobile ? "block" : "block", sm: "block" }
+            }}
+          >
             <Box
               sx={{
                 position: "absolute",
@@ -170,12 +192,19 @@ function LegRow({ title, leg }: { title: "Outbound" | "Return"; leg: FlightLeg }
                 left: "50%",
                 transform: "translate(-50%, -50%)",
                 bgcolor: "background.paper",
-                px: 1,
+                px: { xs: 0.75, sm: 1 },
               }}
             >
               <Stack direction="row" spacing={0.5} alignItems="center">
-                <AccessTimeIcon sx={{ fontSize: 14, color: "text.secondary" }} />
-                <Typography variant="caption" sx={{ fontWeight: 600, color: "text.secondary" }}>
+                <AccessTimeIcon sx={{ fontSize: { xs: 12, sm: 14 }, color: "text.secondary" }} />
+                <Typography 
+                  variant="caption" 
+                  sx={{ 
+                    fontWeight: 600, 
+                    color: "text.secondary",
+                    fontSize: { xs: "0.7rem", sm: "0.75rem" }
+                  }}
+                >
                   {fmtDuration(leg.durationMinutes)}
                 </Typography>
               </Stack>
@@ -183,10 +212,17 @@ function LegRow({ title, leg }: { title: "Outbound" | "Return"; leg: FlightLeg }
           </Box>
 
           <Stack direction="row" spacing={1} alignItems="center">
-            <Typography variant="h6" sx={{ fontWeight: 800, letterSpacing: 0.5 }}>
+            <Typography 
+              variant={isMobile ? "body1" : "h6"} 
+              sx={{ 
+                fontWeight: 800, 
+                letterSpacing: 0.5,
+                fontSize: { xs: "0.95rem", sm: "1.25rem" }
+              }}
+            >
               {fmtTime(leg.arrivalDateTime)}
             </Typography>
-            <FlightLandIcon sx={{ fontSize: 18, color: "text.secondary" }} />
+            <FlightLandIcon sx={{ fontSize: { xs: 16, sm: 18 }, color: "text.secondary" }} />
           </Stack>
         </Stack>
 
@@ -215,24 +251,28 @@ function FlightCard({ f, badges }: { f: FlightOffer; allFlights: FlightOffer[]; 
     <Paper
       variant="outlined"
       sx={{
-        p: 2.5,
-        borderRadius: 3,
+        p: { xs: 2, sm: 2.5 },
+        borderRadius: { xs: 2, sm: 3 },
         border: `1px solid ${alpha(theme.palette.divider, 0.5)}`,
         transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
         position: "relative",
         overflow: "hidden",
         "&:hover": {
-          transform: "translateY(-4px)",
-          boxShadow: theme.shadows[8],
+          transform: isMobile ? "none" : "translateY(-4px)",
+          boxShadow: isMobile ? theme.shadows[2] : theme.shadows[8],
           borderColor: alpha(theme.palette.primary.main, 0.3),
         },
       }}
     >
-      <Stack spacing={2}>
+      <Stack spacing={{ xs: 1.5, sm: 2 }}>
         {/* Main content */}
-        <Stack direction="row" justifyContent="space-between" spacing={3}>
+        <Stack 
+          direction={{ xs: "column", sm: "row" }} 
+          justifyContent="space-between" 
+          spacing={{ xs: 2, sm: 3 }}
+        >
           {/* LEFT - Flight details */}
-          <Stack spacing={2} sx={{ minWidth: 0, flex: 1 }}>
+          <Stack spacing={{ xs: 1.5, sm: 2 }} sx={{ minWidth: 0, flex: 1 }}>
             {out && <LegRow title="Outbound" leg={out} />}
             {ret && <LegRow title="Return" leg={ret} />}
 
@@ -271,19 +311,23 @@ function FlightCard({ f, badges }: { f: FlightOffer; allFlights: FlightOffer[]; 
 
           {/* RIGHT - Price */}
           <Stack
-            alignItems="flex-end"
-            justifyContent="space-between"
+            direction={{ xs: "row", sm: "column" }}
+            alignItems={{ xs: "center", sm: "flex-end" }}
+            justifyContent={{ xs: "space-between", sm: "space-between" }}
             spacing={1}
             sx={{
-              minWidth: 120,
+              minWidth: { xs: "100%", sm: 120 },
+              pt: { xs: 1, sm: 0 },
+              borderTop: { xs: `1px solid ${alpha(theme.palette.divider, 0.3)}`, sm: "none" },
             }}
           >
-            <Stack alignItems="flex-end" spacing={0.25}>
+            <Stack alignItems={{ xs: "flex-start", sm: "flex-end" }} spacing={0.25}>
               <Typography
-                variant="h5"
+                variant={isMobile ? "h6" : "h5"}
                 sx={{
                   fontWeight: 900,
                   lineHeight: 1.2,
+                  fontSize: { xs: "1.25rem", sm: "1.5rem" },
                 }}
               >
                 {Math.round(f.priceTotal)} {f.currency}
@@ -300,11 +344,13 @@ function FlightCard({ f, badges }: { f: FlightOffer; allFlights: FlightOffer[]; 
             </Stack>
             {isMobile && (
               <IconButton
-                size="small"
+                size="medium"
                 onClick={() => setExpanded(!expanded)}
                 sx={{
                   border: "1px solid",
                   borderColor: "divider",
+                  width: 40,
+                  height: 40,
                   "&:hover": {
                     bgcolor: "action.hover",
                   },

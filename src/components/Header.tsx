@@ -31,14 +31,14 @@ export default function Header({
       }}
     >
       <Container maxWidth="lg" disableGutters>
-        <Toolbar sx={{ px: { xs: 2, sm: 3 }, minHeight: { xs: 60, sm: 70 } }}>
+        <Toolbar sx={{ px: { xs: 2, sm: 3 }, minHeight: { xs: 56, sm: 70 } }}>
           {/* LEFT */}
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: { xs: 1, sm: 1.5 } }}>
             <Box
               sx={{
-                width: 38,
-                height: 38,
-                borderRadius: 2.5,
+                width: { xs: 36, sm: 38 },
+                height: { xs: 36, sm: 38 },
+                borderRadius: { xs: 2, sm: 2.5 },
                 display: "grid",
                 placeItems: "center",
                 border: "1px solid",
@@ -46,15 +46,22 @@ export default function Header({
                 bgcolor: "background.default",
               }}
             >
-              <FlightTakeoffIcon fontSize="small" />
+              <FlightTakeoffIcon fontSize={isMobile ? "small" : "small"} />
             </Box>
   
             <Box>
-              <Typography variant="h6" sx={{ fontWeight: 900, letterSpacing: -0.4 }}>
+              <Typography 
+                variant="h6" 
+                sx={{ 
+                  fontWeight: 900, 
+                  letterSpacing: -0.4,
+                  fontSize: { xs: "1.1rem", sm: "1.25rem" }
+                }}
+              >
                 {title}
               </Typography>
               {!isMobile && (
-                <Typography variant="caption" color="text.secondary">
+                <Typography variant="caption" color="text.secondary" sx={{ fontSize: "0.7rem" }}>
                   Fast search • Live filters • Price trends
                 </Typography>
               )}
@@ -67,17 +74,24 @@ export default function Header({
           <IconButton
             onClick={toggleMode}
             aria-label="Toggle dark mode"
-            size="small"
+            size={isMobile ? "medium" : "small"}
             sx={{ 
               border: "1px solid", 
               borderColor: "divider",
               color: "#ffc107",
+              width: { xs: 40, sm: 36 },
+              height: { xs: 40, sm: 36 },
               "&:hover": {
                 color: "#ffb300",
+                bgcolor: "action.hover",
               }
             }}
           >
-            {mode === "dark" ? <LightModeIcon fontSize="small" /> : <DarkModeIcon fontSize="small" />}
+            {mode === "dark" ? (
+              <LightModeIcon fontSize={isMobile ? "medium" : "small"} />
+            ) : (
+              <DarkModeIcon fontSize={isMobile ? "medium" : "small"} />
+            )}
           </IconButton>
         </Toolbar>
       </Container>

@@ -48,12 +48,20 @@ import {
       filters.priceMax != null;
   
     return (
-      <Stack spacing={2}>
+      <Stack spacing={{ xs: 2, sm: 2.5 }} sx={{ p: { xs: 1.5, sm: 2 } }}>
         <Stack direction="row" alignItems="center" justifyContent="space-between">
-          <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>
+          <Typography variant="subtitle1" sx={{ fontWeight: 800, fontSize: { xs: "0.95rem", sm: "1rem" } }}>
             Filters
           </Typography>
-          <Button size="small" onClick={() => dispatch(clearFilters())} disabled={!hasAnyFilter}>
+          <Button 
+            size="small" 
+            onClick={() => dispatch(clearFilters())} 
+            disabled={!hasAnyFilter}
+            sx={{
+              minHeight: { xs: 40, sm: 32 },
+              px: { xs: 2, sm: 1.5 },
+            }}
+          >
             Clear
           </Button>
         </Stack>
@@ -71,10 +79,50 @@ import {
                 dispatch(setStopsFilter(e.target.value as any));
               }}
             >
-              <FormControlLabel value="any" control={<Radio />} label="Any" />
-              <FormControlLabel value="0" control={<Radio />} label="Direct" />
-              <FormControlLabel value="1" control={<Radio />} label="1 stop" />
-              <FormControlLabel value="2+" control={<Radio />} label="2+ stops" />
+              <FormControlLabel 
+                value="any" 
+                control={<Radio />} 
+                label="Any"
+                sx={{ 
+                  "& .MuiFormControlLabel-label": { 
+                    fontSize: { xs: "0.9rem", sm: "0.875rem" } 
+                  },
+                  minHeight: { xs: 48, sm: 40 },
+                }}
+              />
+              <FormControlLabel 
+                value="0" 
+                control={<Radio />} 
+                label="Direct"
+                sx={{ 
+                  "& .MuiFormControlLabel-label": { 
+                    fontSize: { xs: "0.9rem", sm: "0.875rem" } 
+                  },
+                  minHeight: { xs: 48, sm: 40 },
+                }}
+              />
+              <FormControlLabel 
+                value="1" 
+                control={<Radio />} 
+                label="1 stop"
+                sx={{ 
+                  "& .MuiFormControlLabel-label": { 
+                    fontSize: { xs: "0.9rem", sm: "0.875rem" } 
+                  },
+                  minHeight: { xs: 48, sm: 40 },
+                }}
+              />
+              <FormControlLabel 
+                value="2+" 
+                control={<Radio />} 
+                label="2+ stops"
+                sx={{ 
+                  "& .MuiFormControlLabel-label": { 
+                    fontSize: { xs: "0.9rem", sm: "0.875rem" } 
+                  },
+                  minHeight: { xs: 48, sm: 40 },
+                }}
+              />
             </RadioGroup>
           </FormControl>
         </Box>
@@ -95,6 +143,18 @@ import {
             onChange={(_, v) => {
               const [min, max] = v as number[];
               dispatch(setPriceRange({ min, max }));
+            }}
+            sx={{
+              "& .MuiSlider-thumb": {
+                width: { xs: 20, sm: 16 },
+                height: { xs: 20, sm: 16 },
+              },
+              "& .MuiSlider-track": {
+                height: { xs: 4, sm: 3 },
+              },
+              "& .MuiSlider-rail": {
+                height: { xs: 4, sm: 3 },
+              },
             }}
           />
           <Stack direction="row" spacing={1} flexWrap="wrap">
@@ -134,13 +194,21 @@ import {
                   }
                   label={
                     <Stack direction="row" justifyContent="space-between" sx={{ width: "100%" }}>
-                      <Typography variant="body2">{a.code}</Typography>
-                      <Typography variant="body2" color="text.secondary">
+                      <Typography variant="body2" sx={{ fontSize: { xs: "0.9rem", sm: "0.875rem" } }}>
+                        {a.code}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: "0.9rem", sm: "0.875rem" } }}>
                         ({a.count})
                       </Typography>
                     </Stack>
                   }
-                  sx={{ mr: 0 }}
+                  sx={{ 
+                    mr: 0,
+                    minHeight: { xs: 48, sm: 40 },
+                    "& .MuiCheckbox-root": {
+                      padding: { xs: "12px", sm: "9px" },
+                    }
+                  }}
                 />
               );
             })}

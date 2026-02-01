@@ -290,12 +290,12 @@ import SearchIcon from "@mui/icons-material/Search";
                   return;
                 }
                 const value = parseInt(inputValue, 10);
-                // Always dispatch - the reducer will clamp the value between 1-9
+                // Always dispatch - the reducer will clamp the value between 1-30
                 if (!isNaN(value)) {
                   dispatch(setTravelers(value));
                 }
               }}
-              inputProps={{ min: 1, max: 9, step: 1 }}
+              inputProps={{ min: 1, max: 30, step: 1 }}
               size="medium"
               fullWidth
               sx={{

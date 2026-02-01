@@ -91,7 +91,7 @@ const slice = createSlice({
       }
     },
     setTravelers(state, action: PayloadAction<number>) {
-      state.travelers = Math.max(1, Math.min(9, action.payload)); // Clamp between 1 and 9
+      state.travelers = Math.max(1, Math.min(30, action.payload)); // Clamp between 1 and 30
     },
 
     setStopsFilter(state, action: PayloadAction<StopsFilter>) {

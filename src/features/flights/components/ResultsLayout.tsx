@@ -28,7 +28,6 @@ export default function ResultsLayout() {
   const submittedQuery = useAppSelector((s) => s.search.submittedQuery);
   const sort = useAppSelector((s) => s.search.sort);
   
-  // Memoize the query object to prevent unnecessary re-renders
   const memoizedQuery = useMemo(() => {
     if (!submittedQuery) return null;
     return {
@@ -40,7 +39,6 @@ export default function ResultsLayout() {
     };
   }, [submittedQuery?.origin, submittedQuery?.destination, submittedQuery?.departDate, submittedQuery?.returnDate, submittedQuery?.travelers]);
 
-  // Use infinite scroll hook
   const {
     flights,
     hasMore,
@@ -50,17 +48,15 @@ export default function ResultsLayout() {
     loadMore,
   } = useInfiniteFlights(memoizedQuery);
 
-  // Track previous query to detect when return date is added/removed
   const previousQueryRef = useRef<string>("");
   const currentQueryKey = useMemo(() => {
     if (!submittedQuery) return "";
     return `${submittedQuery.origin}-${submittedQuery.destination}-${submittedQuery.departDate}-${submittedQuery.returnDate || ""}-${submittedQuery.travelers}`;
   }, [submittedQuery]);
 
-  // Smoothly scroll down to the results when they finish loading
   useEffect(() => {
     if (!isLoading && flights && flights.length > 0 && resultsRef.current) {
-      // Only auto-scroll if this is a new search (query changed)
+      // Auto-scroll only on new searches
       const isNewSearch = previousQueryRef.current !== currentQueryKey;
       if (isNewSearch) {
         setTimeout(() => {
@@ -71,7 +67,6 @@ export default function ResultsLayout() {
     }
   }, [isLoading, flights, currentQueryKey]);
 
-  // Press Escape to close the filters drawer
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === "Escape" && filtersOpen) {
@@ -82,7 +77,6 @@ export default function ResultsLayout() {
     return () => window.removeEventListener("keydown", handleEsc);
   }, [filtersOpen]);
 
-  // Create these selectors once and reuse them (they're memoized)
   const selectFilteredFlights = useMemo(makeSelectFilteredFlights, []);
   const selectChartSeries = useMemo(makeSelectChartSeries, []);
   const selectAvailableAirlines = useMemo(makeSelectAvailableAirlines, []);
@@ -101,7 +95,6 @@ export default function ResultsLayout() {
     </Box>
   );
 
-  // Show loading skeletons while we're fetching
   if (isLoading) {
     return (
       <Box ref={resultsRef}>
@@ -116,19 +109,16 @@ export default function ResultsLayout() {
     );
   }
 
-  // Something went wrong
   if (error) {
     return <ErrorState message="Failed to load flights" />;
   }
 
-  // User hasn't searched yet, so don't show anything
   if (!submittedQuery) {
     return null;
   }
 
-  // User searched but we didn't find any flights
   if (!flights || flights.length === 0) {
-    // Mark the submitted date(s) as having no flights
+    // Mark dates with no flights
     if (submittedQuery.departDate) {
       dispatch(markDateAsNoFlights(submittedQuery.departDate));
     }

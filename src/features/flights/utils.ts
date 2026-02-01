@@ -17,19 +17,17 @@ export function getFlightBadges(
   const minPrice = Math.min(...prices);
   const minDuration = Math.min(...durations);
 
-  // Use a small epsilon for floating point comparison
+  // Small tolerance for floating point comparison
   const priceEpsilon = 0.01;
-  const durationEpsilon = 1; // 1 minute tolerance
+  const durationEpsilon = 1;
 
   const isCheapest = Math.abs(flight.priceTotal - minPrice) < priceEpsilon;
   const flightDuration = getTotalDurationMinutes(flight);
   const isFastest = Math.abs(flightDuration - minDuration) < durationEpsilon;
 
-  // If it's both cheapest and fastest, that's the best option
   if (isCheapest && isFastest) {
     badges.push("best");
   } else {
-    // Otherwise, show individual badges
     if (isCheapest) {
       badges.push("cheapest");
     }
@@ -41,7 +39,7 @@ export function getFlightBadges(
   return badges;
 }
 
-// Map airline codes to their logos (using emoji as a simple fallback for now)
+// Airline logo mapping
 export const AIRLINE_LOGOS: Record<string, string> = {
   "AA": "✈️", // American Airlines
   "DL": "✈️", // Delta

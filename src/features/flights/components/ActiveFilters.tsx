@@ -13,7 +13,6 @@ export default function ActiveFilters() {
 
   const chips: Array<{ label: string; onDelete: () => void }> = [];
 
-  // Add a chip for the stops filter if it's not set to "any"
   if (filters.stops !== "any") {
     const label = filters.stops === "0" ? "Direct" : filters.stops === "1" ? "1 stop" : "2+ stops";
     chips.push({
@@ -22,7 +21,6 @@ export default function ActiveFilters() {
     });
   }
 
-  // Add a chip for price range if the user set one
   if (filters.priceMin != null || filters.priceMax != null) {
     chips.push({
       label: `Price: ${filters.priceMin ?? "min"} - ${filters.priceMax ?? "max"}`,
@@ -30,7 +28,6 @@ export default function ActiveFilters() {
     });
   }
 
-  // Add a chip for each selected airline
   filters.airlines.forEach((code) => {
     chips.push({
       label: `Airline: ${code}`,

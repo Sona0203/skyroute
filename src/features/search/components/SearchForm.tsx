@@ -41,12 +41,9 @@ import SearchIcon from "@mui/icons-material/Search";
     const [returnPickerOpen, setReturnPickerOpen] = useState(false);
     const [travelersInput, setTravelersInput] = useState<string>(String(travelers));
 
-  // Sync local input state when Redux travelers changes
   useEffect(() => {
     setTravelersInput(String(travelers));
   }, [travelers]);
-
-  // For round-trip, return date is required
   const canSearch = Boolean(
     origin && 
     destination && 
@@ -60,7 +57,6 @@ import SearchIcon from "@mui/icons-material/Search";
     }
   };
 
-  // Let users press Enter to search
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && canSearch) {
       e.preventDefault();
@@ -81,7 +77,7 @@ import SearchIcon from "@mui/icons-material/Search";
         overflow: "hidden",
       }}
     >
-      {/* Trip type tabs - Kayak style */}
+      {/* Trip type tabs */}
       <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
         <Tabs
           value={tripType === "one-way" ? 0 : 1}
@@ -105,7 +101,7 @@ import SearchIcon from "@mui/icons-material/Search";
       </Box>
 
       <CardContent sx={{ p: { xs: 2, sm: 2.5 } }}>
-        {/* Single line search form - horizontal on desktop */}
+        {/* Search form fields */}
         <Stack
           direction={{ xs: "column", lg: "row" }}
           spacing={0}
@@ -116,7 +112,6 @@ import SearchIcon from "@mui/icons-material/Search";
             }
           }}
         >
-          {/* From */}
           <Box sx={{ flex: { xs: 1, lg: "1.3 1 0" }, px: { xs: 0, lg: 1 }, py: { xs: 1, lg: 0 } }}>
             <AirportAutocomplete
               label="From"
@@ -125,7 +120,6 @@ import SearchIcon from "@mui/icons-material/Search";
             />
           </Box>
 
-          {/* Swap button - vertical divider style */}
           <Box 
             sx={{ 
               display: { xs: "none", lg: "flex" },
@@ -153,7 +147,6 @@ import SearchIcon from "@mui/icons-material/Search";
             </IconButton>
           </Box>
 
-          {/* To */}
           <Box sx={{ flex: { xs: 1, lg: "1.3 1 0" }, px: { xs: 0, lg: 1 }, py: { xs: 1, lg: 0 } }}>
             <AirportAutocomplete
               label="To"
@@ -162,7 +155,6 @@ import SearchIcon from "@mui/icons-material/Search";
             />
           </Box>
 
-          {/* Dates */}
           <LocalizationProvider dateAdapter={AdapterDateFns}>
             <Box sx={{ flex: { xs: 1, lg: "0.6 1 0" }, px: { xs: 0, lg: 1 }, py: { xs: 1, lg: 0 } }}>
               <DatePicker
@@ -175,7 +167,7 @@ import SearchIcon from "@mui/icons-material/Search";
                 onChange={(newValue) => {
                   if (newValue && isValid(newValue)) {
                     const dateStr = format(newValue, "yyyy-MM-dd");
-                    // Prevent selecting disabled dates
+                    // Don't allow selecting dates with no flights
                     if (!datesWithNoFlights.includes(dateStr)) {
                       dispatch(setDepartDate(dateStr));
                       setDepartPickerOpen(false);
@@ -222,7 +214,7 @@ import SearchIcon from "@mui/icons-material/Search";
                   onChange={(newValue) => {
                     if (newValue && isValid(newValue)) {
                       const dateStr = format(newValue, "yyyy-MM-dd");
-                      // Prevent selecting disabled dates
+                      // Don't allow selecting dates with no flights
                       if (!datesWithNoFlights.includes(dateStr)) {
                         dispatch(setReturnDate(dateStr));
                         setReturnPickerOpen(false);
@@ -283,7 +275,6 @@ import SearchIcon from "@mui/icons-material/Search";
             )}
           </LocalizationProvider>
 
-          {/* Travelers */}
           <Box sx={{ flex: { xs: 1, lg: "0.5 1 0" }, px: { xs: 0, lg: 1 }, py: { xs: 1, lg: 0 } }}>
             <TextField
               type="text"
@@ -291,26 +282,21 @@ import SearchIcon from "@mui/icons-material/Search";
               value={travelersInput}
               onChange={(e) => {
                 const inputValue = e.target.value;
-                // Allow any input while typing (user can type numbers)
                 if (inputValue === "" || /^\d*$/.test(inputValue)) {
                   setTravelersInput(inputValue);
                 }
               }}
               onBlur={(e) => {
-                // When user finishes editing, sync to Redux
                 const inputValue = e.target.value.trim();
                 if (inputValue === "") {
-                  // If empty, reset to 1
                   setTravelersInput("1");
                   dispatch(setTravelers(1));
                   return;
                 }
                 const value = parseInt(inputValue, 10);
                 if (!isNaN(value) && value > 0) {
-                  // Reducer will clamp to 1-30
                   dispatch(setTravelers(value));
                 } else {
-                  // Invalid input, reset to current travelers value
                   setTravelersInput(String(travelers));
                 }
               }}
@@ -329,7 +315,6 @@ import SearchIcon from "@mui/icons-material/Search";
             />
           </Box>
 
-          {/* Search Button - Kayak style orange/red */}
           <Box sx={{ 
             flex: { xs: 1, lg: "0 0 auto" },
             px: { xs: 0, lg: 1 },

@@ -1,4 +1,4 @@
-// Amadeus API client for direct frontend calls
+// Amadeus API client
 type TokenCache = {
   token: string | null;
   expiresAtMs: number; // epoch ms
@@ -12,7 +12,7 @@ const CLIENT_SECRET = import.meta.env.VITE_AMADEUS_CLIENT_SECRET;
 
 async function getAccessToken(): Promise<string> {
   const now = Date.now();
-  // Use cached token if it's still valid (with 10 second buffer)
+  // Use cached token if still valid (10 second buffer)
   if (tokenCache.token && now < tokenCache.expiresAtMs - 10_000) {
     return tokenCache.token;
   }
@@ -63,10 +63,10 @@ async function amadeusGet(path: string, query: Record<string, string | undefined
 
     const text = await resp.text();
     
-    // Handle rate limiting (429) with retry logic
+    // Retry on rate limit errors
     if (resp.status === 429) {
       if (retries > 0) {
-        // Wait with exponential backoff: 1s, 2s, 4s
+        // Exponential backoff: 1s, 2s, 4s
         const waitTime = Math.pow(2, 2 - retries) * 1000;
         await new Promise(resolve => setTimeout(resolve, waitTime));
         return amadeusGet(path, query, retries - 1);
@@ -74,9 +74,9 @@ async function amadeusGet(path: string, query: Record<string, string | undefined
       throw new Error(`Amadeus API rate limit exceeded. Please wait a moment before searching again.`);
     }
     
-    // Handle bad request (400) - likely invalid parameters
+    // Handle bad request errors
     if (resp.status === 400) {
-      // Try to parse error details if available
+      // Try to extract error message
       let errorMsg = "Invalid request. Please check your search parameters.";
       try {
         const errorJson = JSON.parse(text);
@@ -84,7 +84,7 @@ async function amadeusGet(path: string, query: Record<string, string | undefined
           errorMsg = errorJson.errors[0].detail || errorMsg;
         }
       } catch {
-        // If parsing fails, use default message
+        // Fall back to default message if parsing fails
       }
       throw new Error(errorMsg);
     }
@@ -95,25 +95,25 @@ async function amadeusGet(path: string, query: Record<string, string | undefined
     
     return JSON.parse(text);
   } catch (error: any) {
-    // If it's already our custom error, re-throw it
+    // Re-throw custom errors as-is
     if (error.message && error.message.includes("rate limit")) {
       throw error;
     }
-    // Otherwise, wrap it
+    // Wrap other errors
     throw new Error(`Amadeus API error: ${error.message}`);
   }
 }
 
-// Airport autocomplete using Amadeus API
+// Airport autocomplete
 export async function airportAutocomplete(keyword: string) {
-  // Clean the keyword: remove special characters, em dashes, and extra whitespace
+  // Clean keyword: remove special characters and normalize
   const cleanedKeyword = keyword
-    .replace(/[\u2013\u2014\u2015]/g, "-") // Replace em dashes, en dashes with regular dash
-    .replace(/[^\w\s-]/g, "") // Remove special characters except letters, numbers, spaces, and dashes
+    .replace(/[\u2013\u2014\u2015]/g, "-")
+    .replace(/[^\w\s-]/g, "")
     .trim()
-    .replace(/\s+/g, " "); // Replace multiple spaces with single space
+    .replace(/\s+/g, " ");
   
-  // Don't make API call if keyword is too short or empty after cleaning
+  // Skip API call if keyword is too short
   if (!cleanedKeyword || cleanedKeyword.length < 2) {
     return [];
   }
@@ -136,7 +136,7 @@ export async function airportAutocomplete(keyword: string) {
   }));
 }
 
-// Flight offers search using Amadeus API
+// Flight offers search
 export async function flightOffersSearch(params: {
   origin: string;
   destination: string;

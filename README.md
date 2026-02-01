@@ -9,7 +9,7 @@ A modern flight search application built with React, TypeScript, and the Amadeus
 - **Airport Autocomplete** - Smart airport search with IATA code support and debounced API calls
 - **One-way & Round-trip** - Support for both trip types with tab selection
 - **Date Selection** - MUI DatePicker with dd/MM/yyyy format and date disabling for dates with no flights
-- **Travelers Count** - Select number of travelers (1-9) with price per person display
+- **Travelers Count** - Manual input for number of travelers (1-30) with price per person display
 - **Price Trends** - Visualize price changes throughout the day with animated charts
 - **Smart Filtering** - Filter by stops, airlines, and price range
 - **Multiple Sort Options** - Sort by price, duration, or best value
@@ -158,7 +158,7 @@ skyroute/
 - **Trip Type Tabs**: Switch between one-way and round-trip
 - **Airport Autocomplete**: Debounced search (500ms) with IATA code support
 - **Date Pickers**: MUI DatePicker with dd/MM/yyyy format, click-to-open, and date disabling
-- **Travelers Field**: Number input (1-9) with validation
+- **Travelers Field**: Manual text input (1-30) with validation
 - **Search Button**: Manual search trigger (no auto-search)
 - **Route Swap**: Swap origin and destination with one click
 

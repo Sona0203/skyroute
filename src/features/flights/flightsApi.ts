@@ -20,7 +20,7 @@ function toAirportOption(x: AirportRaw): AirportOption | null {
   return { id: x.id, iataCode: code, label };
 }
 
-// Parse the duration format from Amadeus API (like "PT2H35M" means 2 hours 35 minutes)
+// Parse Amadeus duration format (e.g., "PT2H35M" = 2 hours 35 minutes)
 function parseDurationMinutes(pt: string): number {
     const h = /(\d+)H/.exec(pt)?.[1];
     const m = /(\d+)M/.exec(pt)?.[1];
@@ -38,7 +38,7 @@ function parseDurationMinutes(pt: string): number {
     const itineraries = Array.isArray(raw.itineraries) ? raw.itineraries : [];
   
     const legs = itineraries
-      .slice(0, 2) // Just get the outbound and return flights
+      .slice(0, 2)
       .map((it: any) => {
         const segmentsRaw = it?.segments ?? [];
         const stopsCount = Math.max(0, segmentsRaw.length - 1);
@@ -94,7 +94,7 @@ export const flightsApi = createApi({
             const opt = toAirportOption(item);
             if (opt) out.push(opt);
           }
-          // Remove duplicates - if we have multiple airports with the same code, just keep one
+          // Remove duplicate airport codes
           const seen = new Set<string>();
           const unique = out.filter((o) => {
             if (seen.has(o.iataCode)) return false;
@@ -172,25 +172,21 @@ export const flightsApi = createApi({
           return { error: { status: "CUSTOM_ERROR", error: error.message } };
         }
       },
-      // Serialize query key without page/pageSize so we can cache all pages
+      // Cache all pages together by excluding page/pageSize from key
       serializeQueryArgs: ({ endpointName, queryArgs }) => {
         const { page, pageSize, ...rest } = queryArgs;
         return `${endpointName}(${JSON.stringify(rest)})`;
       },
-      // Merge paginated results - append new pages to existing ones
       merge: (currentCache, newItems, { arg }) => {
         if (arg.page === 1) {
-          // First page - replace everything
           return newItems;
         }
-        // Subsequent pages - append to existing
         return {
           flights: [...(currentCache?.flights ?? []), ...newItems.flights],
           total: newItems.total,
           hasMore: newItems.hasMore,
         };
       },
-      // Force refetch when page changes
       forceRefetch({ currentArg, previousArg }) {
         return currentArg?.page !== previousArg?.page;
       },

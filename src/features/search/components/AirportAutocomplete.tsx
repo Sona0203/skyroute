@@ -20,7 +20,6 @@ export default function AirportAutocomplete({ label, value, onChange }: Props) {
 
   const debounceRef = useRef<number | null>(null);
 
-  // Use RTK Query for airport autocomplete
   const { data: options = [], isLoading: loading } = useAirportAutocompleteQuery(searchQuery, {
     skip: !searchQuery || searchQuery.length < 2,
   });
@@ -36,20 +35,19 @@ export default function AirportAutocomplete({ label, value, onChange }: Props) {
     const found = byCode.get(value);
     if (found) return found;
 
-    // If we swapped airports but they're not in the current options, make a fallback option
+    // Create fallback option if airport was swapped but not in current results
     return { id: value, iataCode: value, label: value };
   }, [value, byCode]);
 
   const isTypingRef = useRef(false);
   const lastSyncedValueRef = useRef(value);
 
-  // Update the input field when the Redux value changes (like when swapping airports)
-  // But don't do this if the user is actively typing - we don't want to interrupt them
+  // Sync input when Redux value changes (e.g., swapping airports)
+  // Don't interrupt if user is actively typing
   useEffect(() => {
-    // Skip if nothing actually changed
     if (value === lastSyncedValueRef.current) return;
     
-    // If the user is typing right now, don't mess with their input
+    // Don't interrupt active typing
     if (isTypingRef.current) {
       lastSyncedValueRef.current = value;
       return;
@@ -63,11 +61,9 @@ export default function AirportAutocomplete({ label, value, onChange }: Props) {
     }
     const opt = byCode.get(value);
     setInputValue(opt ? formatLabel(opt) : value);
-    // We only watch the value, not the options list - otherwise we'd update too often
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value]);
 
-  // Debounce search query updates
   useEffect(() => {
     if (debounceRef.current) window.clearTimeout(debounceRef.current);
 
@@ -93,26 +89,20 @@ export default function AirportAutocomplete({ label, value, onChange }: Props) {
       value={selectedOption}
       inputValue={inputValue}
       onInputChange={(_, next, reason) => {
-        // Only search for airports when the user is actually typing
         setInputValue(next);
 
         if (reason === "input") {
           isTypingRef.current = true;
-          // Give them a moment to finish typing before we allow syncing again
+          // Wait a bit before allowing sync again
           setTimeout(() => {
             isTypingRef.current = false;
           }, 500);
         } else if (reason === "reset" || reason === "clear") {
           isTypingRef.current = false;
         }
-        // The reason tells us why the input changed:
-        // "input" = user typed something
-        // "reset" = value changed from outside (like swapping airports)
-        // "clear" = user cleared the field
-        // We only want to search when it's "input"
+        // Only search when user types ("input"), not on reset/clear
       }}
       onChange={(_, next) => {
-        // User picked an option, so they're done typing
         isTypingRef.current = false;
         if (!next) {
           onChange("");
@@ -122,7 +112,7 @@ export default function AirportAutocomplete({ label, value, onChange }: Props) {
       }}
       getOptionLabel={(opt) => formatLabel(opt)}
       isOptionEqualToValue={(a, b) => a.iataCode === b.iataCode}
-      filterOptions={(x) => x} // Don't re-sort, keep the order the server gave us
+      filterOptions={(x) => x}
       renderInput={(params) => (
         <TextField
           {...params}

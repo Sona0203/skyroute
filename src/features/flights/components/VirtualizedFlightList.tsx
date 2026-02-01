@@ -22,7 +22,6 @@ function VirtualizedFlightList({
   const loadMoreTriggeredRef = useRef(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Handle scroll for infinite loading
   useEffect(() => {
     const container = containerRef.current;
     if (!container || !onLoadMore || !hasMore || isLoadingMore) return;
@@ -42,7 +41,6 @@ function VirtualizedFlightList({
     return () => container.removeEventListener("scroll", handleScroll);
   }, [onLoadMore, hasMore, isLoadingMore]);
 
-  // Reset load more trigger when flights change
   useEffect(() => {
     loadMoreTriggeredRef.current = false;
   }, [flights.length]);

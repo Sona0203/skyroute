@@ -9,19 +9,15 @@ export function useInfiniteFlights(
   const [page, setPage] = useState(1);
   const queryKeyRef = useRef<string>("");
 
-  // Generate a unique key for this query
   const currentQueryKey = query
     ? `${query.origin}-${query.destination}-${query.departDate}-${query.returnDate || ""}-${query.travelers || 1}`
     : "";
 
-  // Track if query changed to show loading state
   const queryChangedRef = useRef(false);
   const previousQueryKeyRef = useRef<string>("");
 
-  // Reset page when query changes and track the change
   useEffect(() => {
     if (currentQueryKey !== queryKeyRef.current && currentQueryKey !== "") {
-      // Query changed - mark it and reset page
       queryChangedRef.current = true;
       previousQueryKeyRef.current = queryKeyRef.current;
       queryKeyRef.current = currentQueryKey;
@@ -42,7 +38,6 @@ export function useInfiniteFlights(
     { skip: !query }
   );
 
-  // Reset query changed flag when data arrives
   useEffect(() => {
     if (data && !isFetching && queryChangedRef.current) {
       queryChangedRef.current = false;
@@ -55,7 +50,6 @@ export function useInfiniteFlights(
     }
   };
 
-  // Show loading when: initial load, query changed and fetching, or fetching first page
   const isInitialLoading = (isLoading || isFetching) && page === 1;
   const showLoading = isInitialLoading || (queryChangedRef.current && (isFetching || isLoading));
 

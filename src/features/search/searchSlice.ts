@@ -4,19 +4,19 @@ import type { SearchState, StopsFilter, TripType } from "./types";
 
 const today = new Date().toISOString().slice(0, 10);
 
-// Try to load the user's last search from localStorage
+// Restore last search from localStorage
 const loadFromStorage = (): Partial<SearchState> => {
   try {
     const stored = localStorage.getItem("skyroute_search");
     if (stored) {
       const parsed = JSON.parse(stored);
-      // Only restore it if the dates are still in the future
+      // Only restore if dates are still valid
       if (parsed.departDate && parsed.departDate >= today) {
         return parsed;
       }
     }
   } catch {
-    // If something goes wrong, just start fresh
+    // If something goes wrong, start fresh
   }
   return {};
 };
@@ -48,12 +48,12 @@ const slice = createSlice({
   reducers: {
     setOrigin(state, action: PayloadAction<string>) {
       state.origin = action.payload.toUpperCase();
-      // Clear dates with no flights when origin changes (different route = different availability)
+      // Different route means different availability
       state.datesWithNoFlights = [];
     },
     setDestination(state, action: PayloadAction<string>) {
       state.destination = action.payload.toUpperCase();
-      // Clear dates with no flights when destination changes
+      // Different route means different availability
       state.datesWithNoFlights = [];
     },
     swapRoute(state) {
@@ -61,8 +61,7 @@ const slice = createSlice({
         state.origin = state.destination;
         state.destination = prevOrigin;
       
-        // If the user already searched and then swaps, update the search query too
-        // so everything stays in sync
+        // Keep search query in sync when swapping
         if (state.submittedQuery) {
           const qOrigin = state.submittedQuery.origin;
           state.submittedQuery = {
@@ -71,7 +70,7 @@ const slice = createSlice({
             destination: qOrigin,
           };
         }
-        // Clear dates with no flights when route is swapped
+        // Different route means different availability
         state.datesWithNoFlights = [];
     },
     setDepartDate(state, action: PayloadAction<string>) {
@@ -79,7 +78,7 @@ const slice = createSlice({
     },
     setReturnDate(state, action: PayloadAction<string | undefined>) {
       state.returnDate = action.payload;
-      // If return date is cleared, set trip type to one-way
+      // Clearing return date switches to one-way
       if (!action.payload) {
         state.tripType = "one-way";
       }
@@ -87,11 +86,11 @@ const slice = createSlice({
     setTripType(state, action: PayloadAction<TripType>) {
       state.tripType = action.payload;
       if (action.payload === "one-way") {
-        state.returnDate = undefined; // Clear return date if switching to one-way
+        state.returnDate = undefined;
       }
     },
     setTravelers(state, action: PayloadAction<number>) {
-      state.travelers = Math.max(1, Math.min(30, action.payload)); // Clamp between 1 and 30
+      state.travelers = Math.max(1, Math.min(30, action.payload));
     },
 
     setStopsFilter(state, action: PayloadAction<StopsFilter>) {
@@ -133,7 +132,7 @@ const slice = createSlice({
         state.submittedQuery = null;
       },
     markDateAsNoFlights(state, action: PayloadAction<string>) {
-      // Mark a date as having no flights (date in YYYY-MM-DD format)
+      // Mark date as having no flights (YYYY-MM-DD format)
       if (!state.datesWithNoFlights.includes(action.payload)) {
         state.datesWithNoFlights.push(action.payload);
       }
@@ -141,7 +140,7 @@ const slice = createSlice({
     },
 });
 
-// Save the current search to localStorage so we can restore it later
+// Save search to localStorage for later restoration
 export const saveSearchToStorage = (state: SearchState) => {
   try {
     const toSave = {
@@ -157,7 +156,7 @@ export const saveSearchToStorage = (state: SearchState) => {
     };
     localStorage.setItem("skyroute_search", JSON.stringify(toSave));
   } catch {
-    // If localStorage is full or disabled, that's okay - just continue
+    // If localStorage fails, continue anyway
   }
 };
 

@@ -18,7 +18,7 @@ import {
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import ClearIcon from "@mui/icons-material/Clear";
 import SearchIcon from "@mui/icons-material/Search";
-  import { useState } from "react";
+  import { useState, useEffect } from "react";
   import { parseISO, isValid, format } from "date-fns";
   import { useAppDispatch, useAppSelector } from "../../../app/hooks";
   import {
@@ -39,6 +39,12 @@ import SearchIcon from "@mui/icons-material/Search";
     const { origin, destination, departDate, returnDate, tripType, travelers, datesWithNoFlights } = useAppSelector((s) => s.search);
     const [departPickerOpen, setDepartPickerOpen] = useState(false);
     const [returnPickerOpen, setReturnPickerOpen] = useState(false);
+    const [travelersInput, setTravelersInput] = useState<string>(String(travelers));
+
+  // Sync local input state when Redux travelers changes
+  useEffect(() => {
+    setTravelersInput(String(travelers));
+  }, [travelers]);
 
   // For round-trip, return date is required
   const canSearch = Boolean(
@@ -280,22 +286,38 @@ import SearchIcon from "@mui/icons-material/Search";
           {/* Travelers */}
           <Box sx={{ flex: { xs: 1, lg: "0.5 1 0" }, px: { xs: 0, lg: 1 }, py: { xs: 1, lg: 0 } }}>
             <TextField
-              type="number"
+              type="text"
               label="Travelers"
-              value={travelers}
+              value={travelersInput}
               onChange={(e) => {
                 const inputValue = e.target.value;
-                // Allow empty string temporarily while typing
+                // Allow any input while typing (user can type numbers)
+                if (inputValue === "" || /^\d*$/.test(inputValue)) {
+                  setTravelersInput(inputValue);
+                }
+              }}
+              onBlur={(e) => {
+                // When user finishes editing, sync to Redux
+                const inputValue = e.target.value.trim();
                 if (inputValue === "") {
+                  // If empty, reset to 1
+                  setTravelersInput("1");
+                  dispatch(setTravelers(1));
                   return;
                 }
                 const value = parseInt(inputValue, 10);
-                // Always dispatch - the reducer will clamp the value between 1-30
-                if (!isNaN(value)) {
+                if (!isNaN(value) && value > 0) {
+                  // Reducer will clamp to 1-30
                   dispatch(setTravelers(value));
+                } else {
+                  // Invalid input, reset to current travelers value
+                  setTravelersInput(String(travelers));
                 }
               }}
-              inputProps={{ min: 1, max: 30, step: 1 }}
+              inputProps={{ 
+                inputMode: "numeric",
+                pattern: "[0-9]*"
+              }}
               size="medium"
               fullWidth
               sx={{

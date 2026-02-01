@@ -5,30 +5,37 @@ A modern flight search application built with React, TypeScript, and the Amadeus
 ## Features
 
 ### 🎯 Core Functionality
-- **Real-time Flight Search** - Search flights with instant results
-- **Airport Autocomplete** - Smart airport search with IATA code support
-- **One-way & Round-trip** - Support for both trip types
+- **Flight Search** - Search flights with manual search button
+- **Airport Autocomplete** - Smart airport search with IATA code support and debounced API calls
+- **One-way & Round-trip** - Support for both trip types with tab selection
+- **Date Selection** - MUI DatePicker with dd/MM/yyyy format and date disabling for dates with no flights
+- **Travelers Count** - Select number of travelers (1-9) with price per person display
 - **Price Trends** - Visualize price changes throughout the day with animated charts
 - **Smart Filtering** - Filter by stops, airlines, and price range
 - **Multiple Sort Options** - Sort by price, duration, or best value
+- **Infinite Scroll** - Load more flights as you scroll with pagination
 
 ### ✨ User Experience
-- **Best/Cheapest/Fastest Badges** - Quickly identify the best options
+- **Best/Cheapest/Fastest Badges** - Quickly identify the best options based on filtered results
 - **Active Filter Chips** - See and remove active filters at a glance
-- **Sticky Search Summary** - Always see your search route and dates
+- **Sticky Search Summary** - Always see your search route, dates, and flight count
 - **Skeleton Loading** - Smooth loading states while fetching results
-- **Mobile Responsive** - Expandable flight details on mobile devices
+- **Mobile Responsive** - Fully responsive design with mobile-optimized layouts
 - **Dark Mode** - Toggle between light and dark themes with persistence
 - **Keyboard Shortcuts** - Press Enter to search, Esc to close drawers
 - **Auto-scroll** - Automatically scroll to results when search completes
 - **Smart Suggestions** - Helpful suggestions when no results are found
-- **Search Persistence** - Your last search is saved and restored
+- **Search Persistence** - Your last search is saved and restored (including trip type and travelers)
+- **Price per Person** - Shows price per person when multiple travelers are selected
+- **Date Disabling** - Dates with no available flights are automatically disabled in the date picker
 
 ### 🎨 Design
 - Modern Material-UI design system
+- Compact, close-together flight cards with rounded corners
 - Smooth animations and transitions
 - Responsive layout for all screen sizes
 - Accessible components with proper ARIA labels
+- Kayak-inspired search form design
 
 ## Tech Stack
 
@@ -37,12 +44,17 @@ A modern flight search application built with React, TypeScript, and the Amadeus
 - **TypeScript** - Type safety
 - **Vite** - Build tool and dev server
 - **Material-UI (MUI)** - Component library
+- **MUI X Date Pickers** - Date selection with date-fns adapter
 - **Redux Toolkit** - State management
-- **RTK Query** - Data fetching and caching
+- **RTK Query** - Data fetching and caching with pagination
 - **Recharts** - Chart visualizations
+- **date-fns** - Date manipulation and formatting
 
 ### API Integration
 - **Amadeus API** - Direct integration from frontend (OAuth token management handled client-side)
+- **Rate Limiting** - Automatic retry with exponential backoff for 429 errors
+- **Error Handling** - Graceful error handling with user-friendly messages
+- **Keyword Sanitization** - Cleans special characters from airport search queries
 
 ## Getting Started
 
@@ -100,18 +112,41 @@ The production build will be in `dist/`
 skyroute/
 ├── src/
 │   ├── app/               # Redux store and hooks
+│   │   ├── hooks.ts       # Custom hooks (useMobile, useAppSelector, etc.)
+│   │   └── store.ts       # Redux store configuration
 │   ├── components/        # Shared components
+│   │   ├── AppShell.tsx  # Main app layout
+│   │   ├── Header.tsx    # Header with logo and theme switcher
+│   │   └── states/       # Empty and error states
 │   ├── features/          # Feature modules
 │   │   ├── flights/       # Flight search and display
 │   │   │   ├── components/
-│   │   │   │   ├── VirtualizedFlightList.tsx  # Virtualized list with infinite scroll
-│   │   │   │   └── ...
-│   │   │   └── hooks/
-│   │   │       └── useInfiniteFlights.ts  # Infinite scroll hook
+│   │   │   │   ├── VirtualizedFlightList.tsx  # Direct rendering with infinite scroll
+│   │   │   │   ├── FlightCard.tsx            # Individual flight card
+│   │   │   │   ├── FiltersPanel.tsx          # Filter sidebar/drawer
+│   │   │   │   ├── ActiveFilters.tsx         # Active filter chips
+│   │   │   │   ├── PriceChart.tsx            # Price trend visualization
+│   │   │   │   ├── SearchSummaryBar.tsx      # Sticky search summary
+│   │   │   │   └── ResultsLayout.tsx          # Main results layout
+│   │   │   ├── hooks/
+│   │   │   │   └── useInfiniteFlights.ts     # Infinite scroll hook with RTK Query
+│   │   │   ├── flightsApi.ts                 # RTK Query API definition
+│   │   │   ├── selectors.ts                  # Memoized selectors
+│   │   │   ├── types.ts                      # TypeScript types
+│   │   │   └── utils.ts                     # Utility functions (badges, duration, etc.)
 │   │   └── search/        # Search form and state
+│   │       ├── components/
+│   │       │   ├── SearchForm.tsx            # Main search form with tabs
+│   │       │   └── AirportAutocomplete.tsx  # Airport autocomplete component
+│   │       ├── searchSlice.ts               # Redux slice for search state
+│   │       └── types.ts                     # Search-related types
 │   ├── services/          # External API services
-│   │   └── amadeus.ts     # Amadeus API client
-│   └── theme/             # Theme configuration
+│   │   └── amadeus.ts     # Amadeus API client with OAuth and error handling
+│   ├── theme/             # Theme configuration
+│   │   ├── theme.ts       # MUI theme configuration
+│   │   └── ThemeContext.tsx # Theme provider and context
+│   └── constants/         # Shared constants
+│       └── index.ts       # Constants (PAGE_SIZE, debounce timings, etc.)
 ├── public/                 # Static assets
 ├── package.json
 └── README.md
@@ -119,15 +154,29 @@ skyroute/
 
 ## Key Features Explained
 
+### Search Form
+- **Trip Type Tabs**: Switch between one-way and round-trip
+- **Airport Autocomplete**: Debounced search (500ms) with IATA code support
+- **Date Pickers**: MUI DatePicker with dd/MM/yyyy format, click-to-open, and date disabling
+- **Travelers Field**: Number input (1-9) with validation
+- **Search Button**: Manual search trigger (no auto-search)
+- **Route Swap**: Swap origin and destination with one click
+
 ### Search & Filtering
-- **Auto-search**: Searches automatically as you type (debounced)
+- **Manual Search**: Search only triggers when clicking the search button or pressing Enter
 - **Smart Filters**: Price range, stops, and airline filters work together
 - **Filter Chips**: See all active filters and remove them easily
+- **Date Disabling**: Dates that returned no flights are automatically disabled
 
 ### Sorting Options
 - **Price**: Lowest price first
 - **Duration**: Shortest flight time first
 - **Best Value**: Balances price (60%) and duration (40%) for optimal results
+
+### Price Display
+- **Total Price**: Shows total price for all travelers
+- **Price per Person**: Automatically displayed when travelers > 1
+- **Currency**: Displays in the currency returned by the API (default: EUR)
 
 ### Price Trends
 - Visualizes price changes by departure hour
@@ -135,9 +184,21 @@ skyroute/
 - Provides insights like "Prices drop 15% by end of day"
 
 ### Badges
-- **Cheapest**: Lowest price in results
-- **Fastest**: Shortest duration in results
-- **Best**: Both cheapest and fastest
+- **Cheapest**: Lowest price in filtered results
+- **Fastest**: Shortest duration in filtered results
+- **Best**: Both cheapest and fastest (replaces individual badges)
+
+### Infinite Scroll
+- Loads 10 flights per page
+- Automatically loads more when scrolling near bottom
+- Shows loading indicator while fetching
+- Uses RTK Query for efficient caching and data management
+
+### Error Handling
+- **Rate Limiting**: Automatic retry with exponential backoff for 429 errors
+- **Bad Requests**: User-friendly error messages for 400 errors
+- **Keyword Sanitization**: Cleans special characters from search queries
+- **Debouncing**: Reduces API calls for airport autocomplete
 
 ## Environment Variables
 
@@ -158,22 +219,36 @@ skyroute/
 ### State Management
 - Redux Toolkit for global state
 - RTK Query for server state and caching
-- Local storage for search persistence
+- Local storage for search persistence (trip type, travelers, dates, filters)
 
 ### Styling
 - Material-UI components
 - Emotion for CSS-in-JS
 - Responsive design with breakpoints
-- Dark mode support
+- Dark mode support with persistence
+
+### Performance
+- Direct rendering (no virtualization) for simpler code
+- Infinite scroll with pagination (10 items per page)
+- Memoized selectors for efficient state derivation
+- Debounced API calls for airport autocomplete
 
 ## API Integration
 
 The application directly calls the Amadeus API:
 
 - **Airport Autocomplete**: `/v1/reference-data/locations` - Search for airports and cities
-- **Flight Search**: `/v2/shopping/flight-offers` - Search for flight offers
+  - Debounced by 500ms
+  - Keyword sanitization (removes special characters)
+  - Retry logic for rate limits
 
-OAuth token management is handled automatically by the frontend service layer.
+- **Flight Search**: `/v2/shopping/flight-offers` - Search for flight offers
+  - Supports one-way and round-trip
+  - Supports travelers count (adults parameter)
+  - Returns up to 50 results per request
+  - Paginated with 10 items per page
+
+OAuth token management is handled automatically by the frontend service layer with token caching.
 
 ## Browser Support
 - Chrome (latest)

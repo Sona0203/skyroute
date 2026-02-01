@@ -6,7 +6,7 @@ import FlightLandIcon from "@mui/icons-material/FlightLand";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import type { FlightOffer, FlightLeg } from "../types";
 import { getAirlineLogo } from "../utils";
-import { useMobile } from "../../../app/hooks";
+import { useMobile, useAppSelector } from "../../../app/hooks";
 
 function fmtTime(iso: string) {
   return iso ? iso.slice(11, 16) : "—";
@@ -132,15 +132,15 @@ function LegRow({ title, leg }: { title: "Outbound" | "Return"; leg: FlightLeg }
   const isMobile = useMobile("md");
 
   return (
-    <Box
-      sx={{
-        p: { xs: 1.25, sm: 1.5 },
-        borderRadius: { xs: 1.5, sm: 2 },
-        bgcolor: alpha(theme.palette.primary.main, 0.04),
-        border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
-      }}
-    >
-      <Stack spacing={{ xs: 1.25, sm: 1.5 }}>
+      <Box
+        sx={{
+          p: { xs: 0.75, sm: 1 },
+          borderRadius: { xs: 0.75, sm: 1 },
+          bgcolor: alpha(theme.palette.primary.main, 0.04),
+          border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
+        }}
+      >
+        <Stack spacing={{ xs: 0.75, sm: 1 }}>
         {/* Route header */}
         <Stack direction="row" justifyContent="space-between" alignItems="center">
           <Chip 
@@ -164,11 +164,11 @@ function LegRow({ title, leg }: { title: "Outbound" | "Return"; leg: FlightLeg }
           <Stack direction="row" spacing={1} alignItems="center">
             <FlightTakeoffIcon sx={{ fontSize: { xs: 16, sm: 18 }, color: "text.secondary" }} />
             <Typography 
-              variant={isMobile ? "body1" : "h6"} 
+              variant={isMobile ? "body2" : "body2"} 
               sx={{ 
                 fontWeight: 800, 
-                letterSpacing: 0.5,
-                fontSize: { xs: "0.95rem", sm: "1.25rem" }
+                letterSpacing: 0.3,
+                fontSize: { xs: "0.8rem", sm: "0.95rem" }
               }}
             >
               {fmtTime(leg.departureDateTime)}
@@ -214,11 +214,11 @@ function LegRow({ title, leg }: { title: "Outbound" | "Return"; leg: FlightLeg }
 
           <Stack direction="row" spacing={1} alignItems="center">
             <Typography 
-              variant={isMobile ? "body1" : "h6"} 
+              variant={isMobile ? "body2" : "body2"} 
               sx={{ 
                 fontWeight: 800, 
-                letterSpacing: 0.5,
-                fontSize: { xs: "0.95rem", sm: "1.25rem" }
+                letterSpacing: 0.3,
+                fontSize: { xs: "0.8rem", sm: "0.95rem" }
               }}
             >
               {fmtTime(leg.arrivalDateTime)}
@@ -229,10 +229,10 @@ function LegRow({ title, leg }: { title: "Outbound" | "Return"; leg: FlightLeg }
 
         {/* Airport codes */}
         <Stack direction="row" justifyContent="space-between" alignItems="center">
-          <Typography variant="body2" sx={{ fontWeight: 700, fontSize: "0.875rem" }}>
+          <Typography variant="body2" sx={{ fontWeight: 700, fontSize: "0.75rem" }}>
             {from}
           </Typography>
-          <Typography variant="body2" sx={{ fontWeight: 700, fontSize: "0.875rem" }}>
+          <Typography variant="body2" sx={{ fontWeight: 700, fontSize: "0.75rem" }}>
             {to}
           </Typography>
         </Stack>
@@ -245,45 +245,46 @@ function FlightCard({ f, badges }: { f: FlightOffer; allFlights: FlightOffer[]; 
   const theme = useTheme();
   const isMobile = useMobile("md");
   const [expanded, setExpanded] = useState(false);
+  const submittedQuery = useAppSelector((s) => s.search.submittedQuery);
+  const travelers = submittedQuery?.travelers ?? 1;
   const out = f.legs[0];
   const ret = f.legs[1];
+  
+  const pricePerPerson = travelers > 1 ? f.priceTotal / travelers : null;
 
   return (
     <Paper
       variant="outlined"
       sx={{
-        pt: { xs: 2.5, sm: 3 },
-        px: { xs: 2, sm: 2.5 },
-        pb: { xs: 2, sm: 2.5 },
-        borderRadius: { xs: 2, sm: 3 },
-        border: `1px solid ${alpha(theme.palette.divider, 0.2)}`,
-        transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+        p: { xs: 1, sm: 1.25 },
+        borderRadius: { xs: 1, sm: 1.5 },
+        border: `1px solid ${alpha(theme.palette.divider, 0.5)}`,
+        transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
         position: "relative",
+        overflow: "hidden",
+        margin: 0,
         cursor: "pointer",
-        bgcolor: "background.paper",
         "&:hover": {
-          transform: isMobile ? "none" : "translateY(-2px)",
-          boxShadow: isMobile 
-            ? `0 4px 12px ${alpha(theme.palette.common.black, 0.1)}`
-            : `0 6px 20px ${alpha(theme.palette.common.black, 0.12)}`,
+          transform: isMobile ? "none" : "translateY(-1px)",
+          boxShadow: isMobile ? theme.shadows[1] : theme.shadows[4],
           borderColor: alpha(theme.palette.primary.main, 0.3),
         },
       }}
     >
-      <Stack spacing={{ xs: 1.5, sm: 2 }}>
+      <Stack spacing={{ xs: 0.75, sm: 1 }}>
         {/* Main content */}
         <Stack 
           direction={{ xs: "column", sm: "row" }} 
           justifyContent="space-between" 
-          spacing={{ xs: 2, sm: 3 }}
+          spacing={{ xs: 1, sm: 1.5 }}
         >
           {/* LEFT - Flight details */}
-          <Stack spacing={{ xs: 1.5, sm: 2 }} sx={{ minWidth: 0, flex: 1 }}>
+          <Stack spacing={{ xs: 0.75, sm: 1 }} sx={{ minWidth: 0, flex: 1 }}>
             {out && <LegRow title="Outbound" leg={out} />}
             {ret && <LegRow title="Return" leg={ret} />}
 
             {/* Airline and badges */}
-            <Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap" sx={{ pt: 0.5 }}>
+            <Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap" sx={{ pt: 0 }}>
               <Chip
                 icon={<Box component="span">{getAirlineLogo(f.validatingAirline)}</Box>}
                 label={f.validatingAirline}
@@ -322,31 +323,33 @@ function FlightCard({ f, badges }: { f: FlightOffer; allFlights: FlightOffer[]; 
             justifyContent={{ xs: "space-between", sm: "space-between" }}
             spacing={1}
             sx={{
-              minWidth: { xs: "100%", sm: 120 },
-              pt: { xs: 1, sm: 0 },
+              minWidth: { xs: "100%", sm: 90 },
+              pt: { xs: 0.5, sm: 0 },
               borderTop: { xs: `1px solid ${alpha(theme.palette.divider, 0.3)}`, sm: "none" },
             }}
           >
             <Stack alignItems={{ xs: "flex-start", sm: "flex-end" }} spacing={0.25}>
               <Typography
-                variant={isMobile ? "h6" : "h5"}
+                variant={isMobile ? "h6" : "h6"}
                 sx={{
                   fontWeight: 900,
                   lineHeight: 1.2,
-                  fontSize: { xs: "1.25rem", sm: "1.5rem" },
+                  fontSize: { xs: "1rem", sm: "1.1rem" },
                 }}
               >
                 {Math.round(f.priceTotal)} {f.currency}
               </Typography>
-              <Typography
-                variant="caption"
-                sx={{
-                  fontWeight: 500,
-                  color: "text.secondary",
-                }}
-              >
-                total
-              </Typography>
+              {pricePerPerson && (
+                <Typography
+                  variant="caption"
+                  sx={{
+                    fontWeight: 500,
+                    color: "text.secondary",
+                  }}
+                >
+                  {Math.round(pricePerPerson)} {f.currency} / person
+                </Typography>
+              )}
             </Stack>
             {isMobile && (
               <IconButton

@@ -1,8 +1,8 @@
-import { Box, Drawer, IconButton, Stack } from "@mui/material";
+import { Box, Drawer, IconButton, Stack, TextField, MenuItem } from "@mui/material";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import { useMemo, useState, useEffect, useRef } from "react";
 import { useAppDispatch, useAppSelector, useMobile } from "../../../app/hooks";
-import { markDateAsNoFlights } from "../../search/searchSlice";
+import { markDateAsNoFlights, setSort } from "../../search/searchSlice";
 import {
   makeSelectAvailableAirlines,
   makeSelectChartSeries,
@@ -26,7 +26,20 @@ export default function ResultsLayout() {
   const resultsRef = useRef<HTMLDivElement>(null);
 
   const submittedQuery = useAppSelector((s) => s.search.submittedQuery);
+  const sort = useAppSelector((s) => s.search.sort);
   
+  // Memoize the query object to prevent unnecessary re-renders
+  const memoizedQuery = useMemo(() => {
+    if (!submittedQuery) return null;
+    return {
+      origin: submittedQuery.origin,
+      destination: submittedQuery.destination,
+      departDate: submittedQuery.departDate,
+      returnDate: submittedQuery.returnDate,
+      travelers: submittedQuery.travelers,
+    };
+  }, [submittedQuery?.origin, submittedQuery?.destination, submittedQuery?.departDate, submittedQuery?.returnDate, submittedQuery?.travelers]);
+
   // Use infinite scroll hook
   const {
     flights,
@@ -35,13 +48,13 @@ export default function ResultsLayout() {
     isLoadingMore,
     error,
     loadMore,
-  } = useInfiniteFlights(submittedQuery);
+  } = useInfiniteFlights(memoizedQuery);
 
   // Track previous query to detect when return date is added/removed
   const previousQueryRef = useRef<string>("");
   const currentQueryKey = useMemo(() => {
     if (!submittedQuery) return "";
-    return `${submittedQuery.origin}-${submittedQuery.destination}-${submittedQuery.departDate}-${submittedQuery.returnDate || ""}`;
+    return `${submittedQuery.origin}-${submittedQuery.destination}-${submittedQuery.departDate}-${submittedQuery.returnDate || ""}-${submittedQuery.travelers}`;
   }, [submittedQuery]);
 
   // Smoothly scroll down to the results when they finish loading
@@ -88,21 +101,18 @@ export default function ResultsLayout() {
     </Box>
   );
 
-  // Show loading skeletons while we're fetching (initial load or query change)
+  // Show loading skeletons while we're fetching
   if (isLoading) {
     return (
-      <>
-        {submittedQuery && <SearchSummaryBar flightCount={0} />}
-        <Box ref={resultsRef}>
-          <Stack spacing={1.5}>
-            <Stack spacing={1}>
-              {[1, 2, 3, 4].map((i) => (
-                <SkeletonCard key={i} />
-              ))}
-            </Stack>
+      <Box ref={resultsRef}>
+        <Stack spacing={1.5}>
+          <Stack spacing={1}>
+            {[1, 2, 3, 4].map((i) => (
+              <SkeletonCard key={i} />
+            ))}
           </Stack>
-        </Box>
-      </>
+        </Stack>
+      </Box>
     );
   }
 
@@ -119,15 +129,13 @@ export default function ResultsLayout() {
   // User searched but we didn't find any flights
   if (!flights || flights.length === 0) {
     // Mark the submitted date(s) as having no flights
-    if (submittedQuery) {
-      if (submittedQuery.departDate) {
-        dispatch(markDateAsNoFlights(submittedQuery.departDate));
-      }
-      if (submittedQuery.returnDate) {
-        dispatch(markDateAsNoFlights(submittedQuery.returnDate));
-      }
+    if (submittedQuery.departDate) {
+      dispatch(markDateAsNoFlights(submittedQuery.departDate));
     }
-    
+    if (submittedQuery.returnDate) {
+      dispatch(markDateAsNoFlights(submittedQuery.returnDate));
+    }
+
     return (
       <>
         <SearchSummaryBar flightCount={0} />
@@ -143,6 +151,13 @@ export default function ResultsLayout() {
   return (
     <>
       <SearchSummaryBar flightCount={filteredFlights.length} />
+      {/* Chart - positioned right after search summary, before results */}
+      {chartSeries.length > 0 && (
+        <Box sx={{ mb: { xs: 2, sm: 3 } }}>
+          <PriceChart series={chartSeries} currency={currency} />
+        </Box>
+      )}
+
       <Box ref={resultsRef}>
         {/* Mobile: Filters button + bottom drawer */}
         {isMobile && (
@@ -211,13 +226,35 @@ export default function ResultsLayout() {
 
           {/* Main content */}
           <Stack spacing={{ xs: 2, sm: 3 }}>
-            <ActiveFilters />
-            {chartSeries.length > 0 && <PriceChart series={chartSeries} currency={currency} />}
+            {/* Sort select and active filters - in one row */}
+            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 2, mb: { xs: 1.5, sm: 2 } }}>
+              <Box sx={{ flex: 1, minWidth: { xs: "100%", sm: "auto" } }}>
+                <ActiveFilters />
+              </Box>
+              <TextField
+                select
+                size="medium"
+                label="Sort"
+                value={sort}
+                onChange={(e) => dispatch(setSort(e.target.value as any))}
+                sx={{
+                  minWidth: { xs: "100%", sm: 160 },
+                  "& .MuiInputBase-root": {
+                    minHeight: { xs: 56, sm: 56 },
+                    borderRadius: 1,
+                  }
+                }}
+              >
+                <MenuItem value="price">Lowest price</MenuItem>
+                <MenuItem value="duration">Shortest duration</MenuItem>
+                <MenuItem value="bestValue">Best value</MenuItem>
+              </TextField>
+            </Box>
 
             {filteredFlights.length > 0 ? (
               <VirtualizedFlightList
                 flights={filteredFlights}
-                allFlights={flights}
+                allFlights={filteredFlights}
                 onLoadMore={loadMore}
                 hasMore={hasMore}
                 isLoadingMore={isLoadingMore}

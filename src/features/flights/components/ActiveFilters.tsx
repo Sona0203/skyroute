@@ -1,4 +1,4 @@
-import { Box, Chip, Stack, Typography } from "@mui/material";
+import { Chip, Stack, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "../../../app/hooks";
 import {
   clearFilters,
@@ -41,26 +41,23 @@ export default function ActiveFilters() {
   if (chips.length === 0) return null;
 
   return (
-    <Box sx={{ mb: { xs: 1.5, sm: 2 } }}>
-      <Stack 
-        direction="row" 
-        spacing={{ xs: 0.75, sm: 1 }} 
-        alignItems="center" 
-        flexWrap="wrap" 
-        gap={{ xs: 0.75, sm: 1 }}
+    <Stack 
+      direction="row" 
+      spacing={{ xs: 0.75, sm: 1 }} 
+      alignItems="center" 
+      flexWrap="wrap" 
+      gap={{ xs: 0.75, sm: 1 }}
+    >
+      <Typography 
+        variant="caption" 
+        color="text.secondary" 
+        sx={{ 
+          mr: { xs: 0, sm: 0.5 },
+          fontSize: { xs: "0.7rem", sm: "0.75rem" },
+        }}
       >
-        <Typography 
-          variant="caption" 
-          color="text.secondary" 
-          sx={{ 
-            mr: { xs: 0, sm: 0.5 },
-            fontSize: { xs: "0.7rem", sm: "0.75rem" },
-            width: { xs: "100%", sm: "auto" },
-            mb: { xs: 0.5, sm: 0 },
-          }}
-        >
-          Active filters:
-        </Typography>
+        Active filters:
+      </Typography>
         {chips.map((chip, idx) => (
           <Chip
             key={idx}
@@ -92,7 +89,6 @@ export default function ActiveFilters() {
             }}
           />
         )}
-      </Stack>
-    </Box>
+    </Stack>
   );
 }

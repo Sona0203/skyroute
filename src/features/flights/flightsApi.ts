@@ -140,6 +140,7 @@ export const flightsApi = createApi({
         destination: string; 
         departDate: string; 
         returnDate?: string;
+        travelers?: number;
         page: number;
         pageSize: number;
       }
@@ -151,7 +152,7 @@ export const flightsApi = createApi({
             destination: p.destination,
             departDate: p.departDate,
             returnDate: p.returnDate,
-            adults: 1,
+            adults: p.travelers ?? 1,
             max: 50,
             currencyCode: "EUR",
           });

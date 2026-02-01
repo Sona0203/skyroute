@@ -44,7 +44,7 @@ async function getAccessToken(): Promise<string> {
   return tokenCache.token!;
 }
 
-async function amadeusGet(path: string, query: Record<string, string | undefined>) {
+async function amadeusGet(path: string, query: Record<string, string | undefined>, retries = 2): Promise<any> {
   const token = await getAccessToken();
 
   const qs = new URLSearchParams();
@@ -53,23 +53,73 @@ async function amadeusGet(path: string, query: Record<string, string | undefined
   }
 
   const url = `${BASE_URL}${path}?${qs.toString()}`;
-  const resp = await fetch(url, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
+  
+  try {
+    const resp = await fetch(url, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
-  const text = await resp.text();
-  if (!resp.ok) {
-    throw new Error(`Amadeus GET ${path} (${resp.status}): ${text}`);
+    const text = await resp.text();
+    
+    // Handle rate limiting (429) with retry logic
+    if (resp.status === 429) {
+      if (retries > 0) {
+        // Wait with exponential backoff: 1s, 2s, 4s
+        const waitTime = Math.pow(2, 2 - retries) * 1000;
+        await new Promise(resolve => setTimeout(resolve, waitTime));
+        return amadeusGet(path, query, retries - 1);
+      }
+      throw new Error(`Amadeus API rate limit exceeded. Please wait a moment before searching again.`);
+    }
+    
+    // Handle bad request (400) - likely invalid parameters
+    if (resp.status === 400) {
+      // Try to parse error details if available
+      let errorMsg = "Invalid request. Please check your search parameters.";
+      try {
+        const errorJson = JSON.parse(text);
+        if (errorJson.errors && errorJson.errors.length > 0) {
+          errorMsg = errorJson.errors[0].detail || errorMsg;
+        }
+      } catch {
+        // If parsing fails, use default message
+      }
+      throw new Error(errorMsg);
+    }
+    
+    if (!resp.ok) {
+      throw new Error(`Amadeus GET ${path} (${resp.status}): ${text}`);
+    }
+    
+    return JSON.parse(text);
+  } catch (error: any) {
+    // If it's already our custom error, re-throw it
+    if (error.message && error.message.includes("rate limit")) {
+      throw error;
+    }
+    // Otherwise, wrap it
+    throw new Error(`Amadeus API error: ${error.message}`);
   }
-  return JSON.parse(text);
 }
 
 // Airport autocomplete using Amadeus API
 export async function airportAutocomplete(keyword: string) {
+  // Clean the keyword: remove special characters, em dashes, and extra whitespace
+  const cleanedKeyword = keyword
+    .replace(/[\u2013\u2014\u2015]/g, "-") // Replace em dashes, en dashes with regular dash
+    .replace(/[^\w\s-]/g, "") // Remove special characters except letters, numbers, spaces, and dashes
+    .trim()
+    .replace(/\s+/g, " "); // Replace multiple spaces with single space
+  
+  // Don't make API call if keyword is too short or empty after cleaning
+  if (!cleanedKeyword || cleanedKeyword.length < 2) {
+    return [];
+  }
+
   const json = await amadeusGet("/v1/reference-data/locations", {
-    keyword,
+    keyword: cleanedKeyword,
     subType: "AIRPORT,CITY",
     "page[limit]": "10",
     view: "LIGHT",

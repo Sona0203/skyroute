@@ -10,25 +10,32 @@ export function getFlightBadges(
 ): Array<"cheapest" | "fastest" | "best"> {
   const badges: Array<"cheapest" | "fastest" | "best"> = [];
   
-  if (allFlights.length === 0) return badges;
+  if (allFlights.length === 0 || allFlights.length === 1) return badges;
 
   const prices = allFlights.map((f) => f.priceTotal);
   const durations = allFlights.map((f) => getTotalDurationMinutes(f));
   const minPrice = Math.min(...prices);
   const minDuration = Math.min(...durations);
 
-  if (flight.priceTotal === minPrice) {
-    badges.push("cheapest");
-  }
+  // Use a small epsilon for floating point comparison
+  const priceEpsilon = 0.01;
+  const durationEpsilon = 1; // 1 minute tolerance
 
-  if (getTotalDurationMinutes(flight) === minDuration) {
-    badges.push("fastest");
-  }
+  const isCheapest = Math.abs(flight.priceTotal - minPrice) < priceEpsilon;
+  const flightDuration = getTotalDurationMinutes(flight);
+  const isFastest = Math.abs(flightDuration - minDuration) < durationEpsilon;
 
   // If it's both cheapest and fastest, that's the best option
-  if (badges.length === 2) {
-    badges.length = 0;
+  if (isCheapest && isFastest) {
     badges.push("best");
+  } else {
+    // Otherwise, show individual badges
+    if (isCheapest) {
+      badges.push("cheapest");
+    }
+    if (isFastest) {
+      badges.push("fastest");
+    }
   }
 
   return badges;

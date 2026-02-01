@@ -8,6 +8,7 @@ export type SearchState = {
     departDate: string;
     returnDate?: string;
     tripType: TripType;
+    travelers: number;
   
     submittedQuery: SubmittedQuery;
   
@@ -27,4 +28,5 @@ export type SubmittedQuery = {
     destination: string;
     departDate: string;
     returnDate?: string;
+    travelers: number;
 } | null;

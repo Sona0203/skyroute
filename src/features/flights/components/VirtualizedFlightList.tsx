@@ -1,22 +1,12 @@
 import { Box, Stack, Typography, CircularProgress } from "@mui/material";
-import { VariableSizeList as List } from "react-window";
-import { useEffect, useRef, useCallback, useMemo } from "react";
+import { useEffect, useRef } from "react";
 import type { FlightOffer } from "../types";
 import FlightCard from "./FlightCard";
 import { getFlightBadges } from "../utils";
-import { useMobile } from "../../../app/hooks";
-import {
-  BASE_ITEM_HEIGHT,
-  BASE_ITEM_HEIGHT_MOBILE,
-  RETURN_FLIGHT_EXTRA_HEIGHT,
-  RETURN_FLIGHT_EXTRA_HEIGHT_MOBILE,
-  CARD_SPACING_DESKTOP,
-  CARD_SPACING_MOBILE,
-} from "../../../constants";
 
 type Props = {
   flights: FlightOffer[];
-  allFlights: FlightOffer[]; // All flights for badge calculation
+  allFlights: FlightOffer[];
   onLoadMore?: () => void;
   hasMore?: boolean;
   isLoadingMore?: boolean;
@@ -29,223 +19,38 @@ function VirtualizedFlightList({
   hasMore, 
   isLoadingMore 
 }: Props) {
-  const isMobile = useMobile("md");
-  const listRef = useRef<List>(null);
   const loadMoreTriggeredRef = useRef(false);
-  const previousFlightStructureRef = useRef<string>("");
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  // Calculate total height - use viewport height for better scrolling experience
-  const listHeight = useMemo(() => {
-    // Use viewport height minus space for header, search bar, and other UI elements
-    const viewportHeight = typeof window !== "undefined" ? window.innerHeight : 800;
-    // On mobile, we need more space for UI elements
-    const uiSpace = isMobile ? 400 : 350;
-    const availableHeight = Math.max(500, viewportHeight - uiSpace);
-    
-    return availableHeight;
-  }, [isMobile]);
-
-  // Detect when flight structure changes (one-way to round-trip or vice versa)
-  const currentFlightStructure = useMemo(() => {
-    if (flights.length === 0) return "";
-    // Create a signature based on whether flights are one-way or round-trip
-    const hasRoundTrip = flights.some(f => f.legs.length > 1);
-    return hasRoundTrip ? "round-trip" : "one-way";
-  }, [flights]);
-
-  // Reset list when flight structure changes (e.g., return date added/removed)
+  // Handle scroll for infinite loading
   useEffect(() => {
-    if (
-      listRef.current &&
-      previousFlightStructureRef.current !== "" &&
-      previousFlightStructureRef.current !== currentFlightStructure
-    ) {
-      // Reset all cached item sizes and scroll to top
-      listRef.current.resetAfterIndex(0, true);
-      // Small delay to ensure smooth transition
-      setTimeout(() => {
-        if (listRef.current) {
-          listRef.current.scrollToItem(0, "start");
-        }
-      }, 50);
-    }
-    previousFlightStructureRef.current = currentFlightStructure;
-  }, [currentFlightStructure]);
+    const container = containerRef.current;
+    if (!container || !onLoadMore || !hasMore || isLoadingMore) return;
 
-  // Fixed spacing constant - same for all cards regardless of type
-  const cardSpacing = useMemo(() => {
-    return isMobile ? CARD_SPACING_MOBILE : CARD_SPACING_DESKTOP;
-  }, [isMobile]);
-
-  // Calculate item height based on whether it's round-trip and screen size
-  const getItemSize = useCallback(
-    (index: number) => {
-      const flight = flights[index];
-      if (!flight) {
-        return isMobile ? BASE_ITEM_HEIGHT_MOBILE + cardSpacing : BASE_ITEM_HEIGHT + cardSpacing;
-      }
-      
-      // Base height depends on screen size
-      const baseHeight = isMobile ? BASE_ITEM_HEIGHT_MOBILE : BASE_ITEM_HEIGHT;
-      const extraHeight = isMobile ? RETURN_FLIGHT_EXTRA_HEIGHT_MOBILE : RETURN_FLIGHT_EXTRA_HEIGHT;
-      
-      // Round-trip flights have 2 legs, so they need more height
-      const cardHeight = flight.legs.length > 1 ? baseHeight + extraHeight : baseHeight;
-      
-      // Total item height = card height + spacing
-      // Spacing is applied as padding-bottom in Row component - SAME value for all cards
-      return cardHeight + cardSpacing;
-    },
-    [flights, isMobile, cardSpacing]
-  );
-
-  // Handle scroll for infinite loading - trigger when near bottom
-  const handleScroll = useCallback(
-    ({ scrollOffset, scrollUpdateWasRequested }: { scrollOffset: number; scrollUpdateWasRequested: boolean }) => {
-      if (!onLoadMore || !hasMore || isLoadingMore || scrollUpdateWasRequested || loadMoreTriggeredRef.current) {
-        return;
-      }
-
-      // Get the total height of all items
-      let totalHeight = 0;
-      for (let i = 0; i < flights.length; i++) {
-        totalHeight += getItemSize(i);
-      }
-      // Add height for loading indicator if present
-      if (hasMore || isLoadingMore) {
-        totalHeight += 60;
-      }
-
-      // Check if we're near the bottom (within 400px for better UX)
-      const distanceFromBottom = totalHeight - scrollOffset - listHeight;
-      if (distanceFromBottom < 400) {
+    const handleScroll = () => {
+      const scrollBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+      if (scrollBottom < 300 && !loadMoreTriggeredRef.current) {
         loadMoreTriggeredRef.current = true;
         onLoadMore();
-
-        // Reset after a delay to allow for loading
         setTimeout(() => {
           loadMoreTriggeredRef.current = false;
-        }, 1500);
+        }, 1000);
       }
-    },
-    [onLoadMore, hasMore, isLoadingMore, flights.length, listHeight, getItemSize]
-  );
+    };
+
+    container.addEventListener("scroll", handleScroll);
+    return () => container.removeEventListener("scroll", handleScroll);
+  }, [onLoadMore, hasMore, isLoadingMore]);
 
   // Reset load more trigger when flights change
   useEffect(() => {
     loadMoreTriggeredRef.current = false;
   }, [flights.length]);
 
-  const Row = useCallback(
-    ({ index, style }: { index: number; style: React.CSSProperties }) => {
-      const flight = flights[index];
-      if (!flight) return null;
-
-      const badges = getFlightBadges(flight, allFlights);
-
-      return (
-        <div 
-          style={{
-            ...style,
-            overflow: "hidden", // Prevent content from overflowing
-            boxSizing: "border-box",
-          }}
-        >
-          <Box sx={{ 
-            px: { xs: 0, sm: 0.5 }, 
-            pb: cardSpacing, // Apply spacing as padding-bottom - SAME value for all cards
-            width: "100%",
-            height: "100%",
-            boxSizing: "border-box",
-            display: "flex",
-            flexDirection: "column",
-          }}>
-            <Box sx={{ flex: "0 0 auto", width: "100%" }}>
-              <FlightCard f={flight} allFlights={allFlights} badges={badges} />
-            </Box>
-          </Box>
-        </div>
-      );
-    },
-    [flights, allFlights, cardSpacing]
-  );
-
   if (flights.length === 0) {
     return null;
   }
 
-  // On mobile, use a simple scrollable list without virtualization to avoid overlap issues
-  if (isMobile) {
-    return (
-      <Stack spacing={{ xs: 1, sm: 1.5 }}>
-        <Typography 
-          variant="subtitle1" 
-          sx={{ 
-            fontWeight: 800,
-            fontSize: { xs: "0.95rem", sm: "1rem" },
-            px: { xs: 0.5, sm: 0 },
-          }}
-        >
-          Results ({allFlights.length})
-        </Typography>
-        <Box
-          sx={{
-            width: "100%",
-            maxHeight: listHeight,
-            overflowY: "auto",
-            px: { xs: 0.5, sm: 0 },
-            "&::-webkit-scrollbar": {
-              width: "8px",
-            },
-            "&::-webkit-scrollbar-track": {
-              background: "transparent",
-            },
-            "&::-webkit-scrollbar-thumb": {
-              background: "rgba(0,0,0,0.2)",
-              borderRadius: "4px",
-            },
-          }}
-          onScroll={(e) => {
-            const target = e.currentTarget;
-            const scrollBottom = target.scrollHeight - target.scrollTop - target.clientHeight;
-            if (scrollBottom < 300 && hasMore && !isLoadingMore && !loadMoreTriggeredRef.current) {
-              loadMoreTriggeredRef.current = true;
-              onLoadMore?.();
-              setTimeout(() => {
-                loadMoreTriggeredRef.current = false;
-              }, 1000);
-            }
-          }}
-        >
-          <Stack spacing={1}>
-            {flights.map((flight) => {
-              const badges = getFlightBadges(flight, allFlights);
-              return (
-                <Box key={flight.id} sx={{ px: { xs: 0, sm: 0.5 } }}>
-                  <FlightCard f={flight} allFlights={allFlights} badges={badges} />
-                </Box>
-              );
-            })}
-            {(hasMore || isLoadingMore) && (
-              <Box
-                sx={{
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  py: 3,
-                  minHeight: 60,
-                }}
-              >
-                {isLoadingMore && <CircularProgress size={24} />}
-              </Box>
-            )}
-          </Stack>
-        </Box>
-      </Stack>
-    );
-  }
-
-  // Desktop: use virtualization
   return (
     <Stack spacing={{ xs: 1, sm: 1.5 }}>
       <Typography 
@@ -259,48 +64,48 @@ function VirtualizedFlightList({
         Results ({allFlights.length})
       </Typography>
       <Box
+        ref={containerRef}
         sx={{
           width: "100%",
-          height: listHeight,
-          position: "relative",
-          px: { xs: 0.5, sm: 0 },
+          maxHeight: { xs: "70vh", sm: "75vh" },
+          overflowY: "auto",
+          px: { xs: 1, sm: 1.5 },
+          py: { xs: 0.5, sm: 1 },
+          "&::-webkit-scrollbar": {
+            width: "8px",
+          },
+          "&::-webkit-scrollbar-track": {
+            background: "transparent",
+          },
+          "&::-webkit-scrollbar-thumb": {
+            background: "rgba(0,0,0,0.2)",
+            borderRadius: "4px",
+          },
         }}
       >
-        <List
-          ref={listRef}
-          height={listHeight}
-          itemCount={flights.length + (hasMore || isLoadingMore ? 1 : 0)}
-          itemSize={(index) => {
-            if (index >= flights.length) return 60; // Height for loading indicator
-            const size = getItemSize(index);
-            return size;
-          }}
-          width="100%"
-          overscanCount={5}
-          onScroll={handleScroll}
-        >
-          {({ index, style }) => {
-            // Show loading indicator as last item
-            if (index >= flights.length) {
-              return (
-                <div style={style}>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      justifyContent: "center",
-                      alignItems: "center",
-                      py: 3,
-                      minHeight: 60,
-                    }}
-                  >
-                    {isLoadingMore && <CircularProgress size={24} />}
-                  </Box>
-                </div>
-              );
-            }
-            return Row({ index, style });
-          }}
-        </List>
+        <Stack spacing={1}>
+          {flights.map((flight) => {
+            const badges = getFlightBadges(flight, allFlights);
+            return (
+              <Box key={flight.id} sx={{ px: { xs: 0, sm: 0 } }}>
+                <FlightCard f={flight} allFlights={allFlights} badges={badges} />
+              </Box>
+            );
+          })}
+          {(hasMore || isLoadingMore) && (
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                py: 3,
+                minHeight: 60,
+              }}
+            >
+              {isLoadingMore && <CircularProgress size={24} />}
+            </Box>
+          )}
+        </Stack>
       </Box>
     </Stack>
   );

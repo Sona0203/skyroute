@@ -4,14 +4,14 @@ import type { FlightOffer } from "../types";
 import { PAGE_SIZE } from "../../../constants";
 
 export function useInfiniteFlights(
-  query: { origin: string; destination: string; departDate: string; returnDate?: string } | null
+  query: { origin: string; destination: string; departDate: string; returnDate?: string; travelers?: number } | null
 ) {
   const [page, setPage] = useState(1);
   const queryKeyRef = useRef<string>("");
 
   // Generate a unique key for this query
   const currentQueryKey = query
-    ? `${query.origin}-${query.destination}-${query.departDate}-${query.returnDate || ""}`
+    ? `${query.origin}-${query.destination}-${query.departDate}-${query.returnDate || ""}-${query.travelers || 1}`
     : "";
 
   // Track if query changed to show loading state
@@ -35,6 +35,7 @@ export function useInfiniteFlights(
       destination: query?.destination ?? "",
       departDate: query?.departDate ?? "",
       returnDate: query?.returnDate,
+      travelers: query?.travelers ?? 1,
       page,
       pageSize: PAGE_SIZE,
     },

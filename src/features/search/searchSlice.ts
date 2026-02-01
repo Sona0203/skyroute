@@ -29,6 +29,7 @@ const initialState: SearchState = {
     departDate: stored.departDate ?? today,
     returnDate: stored.returnDate,
     tripType: stored.tripType ?? "one-way",
+    travelers: stored.travelers ?? 1,
     filters: {
       stops: stored.filters?.stops ?? "any",
       airlines: stored.filters?.airlines ?? [],
@@ -70,19 +71,27 @@ const slice = createSlice({
             destination: qOrigin,
           };
         }
+        // Clear dates with no flights when route is swapped
+        state.datesWithNoFlights = [];
     },
     setDepartDate(state, action: PayloadAction<string>) {
       state.departDate = action.payload;
     },
     setReturnDate(state, action: PayloadAction<string | undefined>) {
       state.returnDate = action.payload;
+      // If return date is cleared, set trip type to one-way
+      if (!action.payload) {
+        state.tripType = "one-way";
+      }
     },
     setTripType(state, action: PayloadAction<TripType>) {
       state.tripType = action.payload;
-      // Clear return date if switching to one-way
       if (action.payload === "one-way") {
-        state.returnDate = undefined;
+        state.returnDate = undefined; // Clear return date if switching to one-way
       }
+    },
+    setTravelers(state, action: PayloadAction<number>) {
+      state.travelers = Math.max(1, Math.min(9, action.payload)); // Clamp between 1 and 9
     },
 
     setStopsFilter(state, action: PayloadAction<StopsFilter>) {
@@ -117,11 +126,12 @@ const slice = createSlice({
           destination: state.destination,
           departDate: state.departDate,
           returnDate: state.tripType === "round-trip" ? state.returnDate : undefined,
+          travelers: state.travelers,
         };
       },
     clearSubmittedSearch(state) {
-      state.submittedQuery = null;
-    },
+        state.submittedQuery = null;
+      },
     markDateAsNoFlights(state, action: PayloadAction<string>) {
       // Mark a date as having no flights (date in YYYY-MM-DD format)
       if (!state.datesWithNoFlights.includes(action.payload)) {
@@ -140,6 +150,7 @@ export const saveSearchToStorage = (state: SearchState) => {
       departDate: state.departDate,
       returnDate: state.returnDate,
       tripType: state.tripType,
+      travelers: state.travelers,
       filters: state.filters,
       sort: state.sort,
       datesWithNoFlights: state.datesWithNoFlights,
@@ -157,6 +168,7 @@ export const {
   setDepartDate,
   setReturnDate,
   setTripType,
+  setTravelers,
   setStopsFilter,
   toggleAirline,
   setPriceRange,

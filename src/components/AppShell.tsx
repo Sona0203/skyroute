@@ -5,7 +5,7 @@ import Header from "./Header";
 export default function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: "background.default" }}>
-      <Header title="SkyRoute" subtitle="Find the best flights for your next trip" />
+      <Header title="SkyRoute" />
 
       <Container
   maxWidth="lg"

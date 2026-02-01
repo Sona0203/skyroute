@@ -5,7 +5,6 @@ import type { FlightOffer } from "../types";
 import FlightCard from "./FlightCard";
 import { getFlightBadges } from "../utils";
 
-const PAGE_SIZE = 10;
 const BASE_ITEM_HEIGHT = 240; // Base height for one-way flights
 const RETURN_FLIGHT_EXTRA_HEIGHT = 180; // Extra height for return flight
 

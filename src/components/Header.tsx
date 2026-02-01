@@ -6,12 +6,10 @@ import { useThemeMode } from "../theme/ThemeContext";
 
 type Props = {
   title?: string;
-  subtitle?: string;
 };
 
 export default function Header({
   title = "SkyRoute",
-  subtitle = "Find the best flights for your next trip",
 }: Props) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));

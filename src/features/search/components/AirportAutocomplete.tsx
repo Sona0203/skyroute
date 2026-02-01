@@ -1,15 +1,7 @@
 import { Autocomplete, CircularProgress, TextField } from "@mui/material";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useAirportAutocompleteQuery } from "../../flights/flightsApi";
-
-type AirportOption = {
-  id: string;
-  iataCode: string;
-  name: string;
-  cityName?: string;
-  countryCode?: string;
-  type?: string;
-};
+import type { AirportOption } from "../../flights/types";
 
 type Props = {
   label: string;
@@ -20,10 +12,7 @@ type Props = {
 const DEBOUNCE_MS = 250;
 
 function formatLabel(o: AirportOption) {
-  const primary = o.iataCode ? `${o.iataCode}` : "";
-  const secondaryParts = [o.cityName, o.name, o.countryCode].filter(Boolean);
-  const secondary = secondaryParts.length ? ` — ${secondaryParts.join(", ")}` : "";
-  return `${primary}${secondary}`;
+  return o.label;
 }
 
 export default function AirportAutocomplete({ label, value, onChange }: Props) {
@@ -49,7 +38,7 @@ export default function AirportAutocomplete({ label, value, onChange }: Props) {
     if (found) return found;
 
     // If we swapped airports but they're not in the current options, make a fallback option
-    return { id: value, iataCode: value, name: value, type: "AIRPORT" };
+    return { id: value, iataCode: value, label: value };
   }, [value, byCode]);
 
   const isTypingRef = useRef(false);

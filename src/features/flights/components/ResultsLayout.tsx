@@ -11,7 +11,6 @@ import {
 } from "../selectors";
 import FiltersPanel from "./FiltersPanel";
 import PriceChart from "./PriceChart";
-import FlightList from "./FlightList";
 import VirtualizedFlightList from "./VirtualizedFlightList";
 import { useInfiniteFlights } from "../hooks/useInfiniteFlights";
 import EmptyState from "../../../components/states/EmptyState";
@@ -37,7 +36,6 @@ export default function ResultsLayout({ flights: initialFlights, loading: initia
   // Use infinite scroll hook
   const {
     flights: paginatedFlights,
-    total: totalFlights,
     hasMore,
     isLoading: isLoadingFirstPage,
     isLoadingMore,

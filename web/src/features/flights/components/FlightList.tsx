@@ -1,6 +1,7 @@
 import { Stack, Typography } from "@mui/material";
 import type { FlightOffer } from "../types";
 import FlightCard from "./FlightCard";
+import { getFlightBadges } from "../utils";
 
 export default function FlightList({ flights }: { flights: FlightOffer[] }) {
   return (
@@ -9,9 +10,10 @@ export default function FlightList({ flights }: { flights: FlightOffer[] }) {
         Results ({flights.length})
       </Typography>
       <Stack spacing={1}>
-        {flights.map((f) => (
-          <FlightCard key={f.id} f={f} />
-        ))}
+        {flights.map((f) => {
+          const badges = getFlightBadges(f, flights);
+          return <FlightCard key={f.id} f={f} allFlights={flights} badges={badges} />;
+        })}
       </Stack>
     </Stack>
   );

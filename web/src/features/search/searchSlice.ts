@@ -4,18 +4,37 @@ import type { SearchState, StopsFilter } from "./types";
 
 const today = new Date().toISOString().slice(0, 10);
 
+// Try to load the user's last search from localStorage
+const loadFromStorage = (): Partial<SearchState> => {
+  try {
+    const stored = localStorage.getItem("skyroute_search");
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      // Only restore it if the dates are still in the future
+      if (parsed.departDate && parsed.departDate >= today) {
+        return parsed;
+      }
+    }
+  } catch {
+    // If something goes wrong, just start fresh
+  }
+  return {};
+};
+
+const stored = loadFromStorage();
+
 const initialState: SearchState = {
-    origin: "",
-    destination: "",
-    departDate: today,
-    returnDate: undefined,
+    origin: stored.origin ?? "",
+    destination: stored.destination ?? "",
+    departDate: stored.departDate ?? today,
+    returnDate: stored.returnDate,
     filters: {
-      stops: "any",
-      airlines: [],
-      priceMin: undefined,
-      priceMax: undefined,
+      stops: stored.filters?.stops ?? "any",
+      airlines: stored.filters?.airlines ?? [],
+      priceMin: stored.filters?.priceMin,
+      priceMax: stored.filters?.priceMax,
     },
-    sort: "price",
+    sort: stored.sort ?? "price",
     submittedQuery: null,
   };
   
@@ -35,8 +54,8 @@ const slice = createSlice({
         state.origin = state.destination;
         state.destination = prevOrigin;
       
-        // Optional: if user already searched and wants swap + re-search,
-        // we should also swap submittedQuery to keep it consistent.
+        // If the user already searched and then swaps, update the search query too
+        // so everything stays in sync
         if (state.submittedQuery) {
           const qOrigin = state.submittedQuery.origin;
           state.submittedQuery = {
@@ -89,9 +108,26 @@ const slice = createSlice({
       },
     clearSubmittedSearch(state) {
         state.submittedQuery = null;
-      },      
+      },
     },
 });
+
+// Save the current search to localStorage so we can restore it later
+export const saveSearchToStorage = (state: SearchState) => {
+  try {
+    const toSave = {
+      origin: state.origin,
+      destination: state.destination,
+      departDate: state.departDate,
+      returnDate: state.returnDate,
+      filters: state.filters,
+      sort: state.sort,
+    };
+    localStorage.setItem("skyroute_search", JSON.stringify(toSave));
+  } catch {
+    // If localStorage is full or disabled, that's okay - just continue
+  }
+};
 
 export const {
   setOrigin,

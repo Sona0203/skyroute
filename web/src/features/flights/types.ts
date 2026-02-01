@@ -1,7 +1,7 @@
 export type AirportOption = {
     id: string;
     iataCode: string;
-    label: string; // "EVN — Yerevan, Armenia"
+    label: string; // Example: "EVN — Yerevan, Armenia"
   };
   
   export type FlightLeg = {
@@ -26,7 +26,7 @@ export type AirportOption = {
     currency: string;
   
     validatingAirline: string;
-    legs: FlightLeg[]; // 1 = one-way, 2 = round-trip
+    legs: FlightLeg[]; // One leg means one-way, two legs means round-trip
   };
   
   export type ChartPoint = {

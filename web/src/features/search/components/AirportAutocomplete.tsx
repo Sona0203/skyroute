@@ -12,7 +12,7 @@ type AirportOption = {
 
 type Props = {
   label: string;
-  value: string; // IATA code in Redux
+  value: string; // The IATA code stored in Redux
   onChange: (iataCode: string) => void;
 };
 
@@ -44,21 +44,38 @@ export default function AirportAutocomplete({ label, value, onChange }: Props) {
     const found = byCode.get(value);
     if (found) return found;
 
-    // fallback so swapped values stay visible even if not in options
+    // If we swapped airports but they're not in the current options, make a fallback option
     return { id: value, iataCode: value, name: value, type: "AIRPORT" };
   }, [value, byCode]);
 
-  // Sync displayed input text when Redux value changes (swap / selection)
+  const isTypingRef = useRef(false);
+  const lastSyncedValueRef = useRef(value);
+
+  // Update the input field when the Redux value changes (like when swapping airports)
+  // But don't do this if the user is actively typing - we don't want to interrupt them
   useEffect(() => {
+    // Skip if nothing actually changed
+    if (value === lastSyncedValueRef.current) return;
+    
+    // If the user is typing right now, don't mess with their input
+    if (isTypingRef.current) {
+      lastSyncedValueRef.current = value;
+      return;
+    }
+
+    lastSyncedValueRef.current = value;
+    
     if (!value) {
       setInputValue("");
       return;
     }
     const opt = byCode.get(value);
     setInputValue(opt ? formatLabel(opt) : value);
-  }, [value, byCode]);
+    // We only watch the value, not the options list - otherwise we'd update too often
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value]);
 
-  // Cleanup pending debounce on unmount
+  // Make sure we clean up any pending search requests when the component unmounts
   useEffect(() => {
     return () => {
       if (debounceRef.current) window.clearTimeout(debounceRef.current);
@@ -85,7 +102,7 @@ export default function AirportAutocomplete({ label, value, onChange }: Props) {
         );
         const json = await resp.json();
 
-        // ignore out-of-order responses
+        // If a newer request already finished, ignore this old one
         if (requestId !== lastRequestIdRef.current) return;
 
         const data = Array.isArray(json?.data) ? json.data : [];
@@ -115,16 +132,28 @@ export default function AirportAutocomplete({ label, value, onChange }: Props) {
       value={selectedOption}
       inputValue={inputValue}
       onInputChange={(_, next, reason) => {
-        // ✅ IMPORTANT: only fetch when user types
+        // Only search for airports when the user is actually typing
         setInputValue(next);
 
         if (reason === "input") {
+          isTypingRef.current = true;
           fetchOptions(next);
+          // Give them a moment to finish typing before we allow syncing again
+          setTimeout(() => {
+            isTypingRef.current = false;
+          }, 500);
+        } else if (reason === "reset" || reason === "clear") {
+          isTypingRef.current = false;
         }
-        // reason can be: "reset" | "clear" | "input"
-        // "reset" happens when value changes (swap/select) — DO NOT fetch then
+        // The reason tells us why the input changed:
+        // "input" = user typed something
+        // "reset" = value changed from outside (like swapping airports)
+        // "clear" = user cleared the field
+        // We only want to search when it's "input"
       }}
       onChange={(_, next) => {
+        // User picked an option, so they're done typing
+        isTypingRef.current = false;
         if (!next) {
           onChange("");
           return;
@@ -133,7 +162,7 @@ export default function AirportAutocomplete({ label, value, onChange }: Props) {
       }}
       getOptionLabel={(opt) => formatLabel(opt)}
       isOptionEqualToValue={(a, b) => a.iataCode === b.iataCode}
-      filterOptions={(x) => x} // keep server order
+      filterOptions={(x) => x} // Don't re-sort, keep the order the server gave us
       renderInput={(params) => (
         <TextField
           {...params}

@@ -19,7 +19,7 @@ function toAirportOption(x: AirportRaw): AirportOption | null {
   return { id: x.id, iataCode: code, label };
 }
 
-// Parse Amadeus-ish duration: "PT2H35M"
+// Parse the duration format from Amadeus API (like "PT2H35M" means 2 hours 35 minutes)
 function parseDurationMinutes(pt: string): number {
     const h = /(\d+)H/.exec(pt)?.[1];
     const m = /(\d+)M/.exec(pt)?.[1];
@@ -37,7 +37,7 @@ function parseDurationMinutes(pt: string): number {
     const itineraries = Array.isArray(raw.itineraries) ? raw.itineraries : [];
   
     const legs = itineraries
-      .slice(0, 2) // only outbound + return
+      .slice(0, 2) // Just get the outbound and return flights
       .map((it: any) => {
         const segmentsRaw = it?.segments ?? [];
         const stopsCount = Math.max(0, segmentsRaw.length - 1);
@@ -92,7 +92,7 @@ export const flightsApi = createApi({
           const opt = toAirportOption(item);
           if (opt) out.push(opt);
         }
-        // a little “product” touch: unique by iata
+        // Remove duplicates - if we have multiple airports with the same code, just keep one
         const seen = new Set<string>();
         return out.filter((o) => {
           if (seen.has(o.iataCode)) return false;
@@ -117,10 +117,69 @@ export const flightsApi = createApi({
       },
       keepUnusedDataFor: 30,
     }),
+
+    getFlightOffersPaginated: builder.query<
+      { flights: FlightOffer[]; total: number; hasMore: boolean },
+      { 
+        origin: string; 
+        destination: string; 
+        departDate: string; 
+        returnDate?: string;
+        page: number;
+        pageSize: number;
+      }
+    >({
+      query: (p) => ({
+        url: "/api/flights/search",
+        params: {
+          origin: p.origin,
+          destination: p.destination,
+          departDate: p.departDate,
+          returnDate: p.returnDate,
+        },
+      }),
+      transformResponse: (resp: any, _meta, arg) => {
+        const raw = resp.data ?? [];
+        const allFlights = raw.map(normalizeOffer);
+        const startIndex = (arg.page - 1) * arg.pageSize;
+        const endIndex = startIndex + arg.pageSize;
+        const flights = allFlights.slice(startIndex, endIndex);
+        
+        return {
+          flights,
+          total: allFlights.length,
+          hasMore: endIndex < allFlights.length,
+        };
+      },
+      // Serialize query key without page/pageSize so we can cache all pages
+      serializeQueryArgs: ({ endpointName, queryArgs }) => {
+        const { page, pageSize, ...rest } = queryArgs;
+        return `${endpointName}(${JSON.stringify(rest)})`;
+      },
+      // Merge paginated results - append new pages to existing ones
+      merge: (currentCache, newItems, { arg }) => {
+        if (arg.page === 1) {
+          // First page - replace everything
+          return newItems;
+        }
+        // Subsequent pages - append to existing
+        return {
+          flights: [...(currentCache?.flights ?? []), ...newItems.flights],
+          total: newItems.total,
+          hasMore: newItems.hasMore,
+        };
+      },
+      // Force refetch when page changes
+      forceRefetch({ currentArg, previousArg }) {
+        return currentArg?.page !== previousArg?.page;
+      },
+      keepUnusedDataFor: 30,
+    }),
   }),
 });
 
 export const {
   useAirportAutocompleteQuery,
   useGetFlightOffersQuery,
+  useGetFlightOffersPaginatedQuery,
 } = flightsApi;

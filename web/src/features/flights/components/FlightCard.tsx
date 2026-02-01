@@ -1,6 +1,11 @@
-import { Box, Chip, Paper, Stack, Tooltip, Typography, Divider } from "@mui/material";
-import { memo } from "react";
+import { Box, Chip, Paper, Stack, Tooltip, Typography, Divider, Collapse, IconButton, useMediaQuery, useTheme, alpha } from "@mui/material";
+import { memo, useState } from "react";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import FlightTakeoffIcon from "@mui/icons-material/FlightTakeoff";
+import FlightLandIcon from "@mui/icons-material/FlightLand";
+import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import type { FlightOffer, FlightLeg } from "../types";
+import { getAirlineLogo } from "../utils";
 
 function fmtTime(iso: string) {
   return iso ? iso.slice(11, 16) : "—";
@@ -77,8 +82,22 @@ function LayoverTooltipContent({ leg }: { leg: FlightLeg }) {
 
 function StopsChip({ leg }: { leg: FlightLeg }) {
   const stops = leg.stopsCount;
+  const theme = useTheme();
 
-  if (stops === 0) return <Chip size="small" label="Direct" />;
+  if (stops === 0) {
+    return (
+      <Chip
+        size="small"
+        label="Direct"
+        sx={{
+          fontWeight: 700,
+          bgcolor: alpha(theme.palette.success.main, 0.1),
+          color: theme.palette.success.main,
+          border: `1px solid ${alpha(theme.palette.success.main, 0.3)}`,
+        }}
+      />
+    );
+  }
 
   return (
     <Tooltip
@@ -92,7 +111,12 @@ function StopsChip({ leg }: { leg: FlightLeg }) {
           size="small"
           variant="outlined"
           label={stopsLabel(stops)}
-          sx={{ cursor: "help" }}
+          sx={{
+            cursor: "help",
+            fontWeight: 600,
+            borderColor: alpha(theme.palette.warning.main, 0.3),
+            color: theme.palette.warning.main,
+          }}
         />
       </span>
     </Tooltip>
@@ -103,33 +127,87 @@ function LegRow({ title, leg }: { title: "Outbound" | "Return"; leg: FlightLeg }
   const chain = routeChain(leg);
   const from = chain[0] ?? "—";
   const to = chain[chain.length - 1] ?? "—";
+  const theme = useTheme();
 
   return (
-    <Stack spacing={0.3}>
-      <Stack direction="row" justifyContent="space-between" alignItems="baseline">
-        <Stack direction="row" spacing={1} alignItems="baseline">
-          <Typography variant="subtitle1" sx={{ fontWeight: 900 }}>
-            {fmtTime(leg.departureDateTime)} → {fmtTime(leg.arrivalDateTime)}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            {fmtDuration(leg.durationMinutes)}
-          </Typography>
-        </Stack>
-
-        <Stack direction="row" spacing={1} alignItems="center">
-          <Chip size="small" label={title} sx={{ fontWeight: 800 }} />
+    <Box
+      sx={{
+        p: 1.5,
+        borderRadius: 2,
+        bgcolor: alpha(theme.palette.primary.main, 0.04),
+        border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
+      }}
+    >
+      <Stack spacing={1.5}>
+        {/* Route header */}
+        <Stack direction="row" justifyContent="space-between" alignItems="center">
+          <Chip 
+            size="small" 
+            label={title} 
+            sx={{ 
+              fontWeight: 700,
+              bgcolor: alpha(theme.palette.primary.main, 0.1),
+              color: theme.palette.primary.main,
+            }} 
+          />
           <StopsChip leg={leg} />
         </Stack>
-      </Stack>
 
-      <Typography variant="body2" sx={{ fontWeight: 800 }}>
-        {from} → {to}
-      </Typography>
-    </Stack>
+        {/* Time and duration */}
+        <Stack direction="row" spacing={2} alignItems="center">
+          <Stack direction="row" spacing={1} alignItems="center">
+            <FlightTakeoffIcon sx={{ fontSize: 18, color: "text.secondary" }} />
+            <Typography variant="h6" sx={{ fontWeight: 800, letterSpacing: 0.5 }}>
+              {fmtTime(leg.departureDateTime)}
+            </Typography>
+          </Stack>
+          
+          <Box sx={{ flex: 1, position: "relative", height: 2, bgcolor: "divider", borderRadius: 1 }}>
+            <Box
+              sx={{
+                position: "absolute",
+                top: "50%",
+                left: "50%",
+                transform: "translate(-50%, -50%)",
+                bgcolor: "background.paper",
+                px: 1,
+              }}
+            >
+              <Stack direction="row" spacing={0.5} alignItems="center">
+                <AccessTimeIcon sx={{ fontSize: 14, color: "text.secondary" }} />
+                <Typography variant="caption" sx={{ fontWeight: 600, color: "text.secondary" }}>
+                  {fmtDuration(leg.durationMinutes)}
+                </Typography>
+              </Stack>
+            </Box>
+          </Box>
+
+          <Stack direction="row" spacing={1} alignItems="center">
+            <Typography variant="h6" sx={{ fontWeight: 800, letterSpacing: 0.5 }}>
+              {fmtTime(leg.arrivalDateTime)}
+            </Typography>
+            <FlightLandIcon sx={{ fontSize: 18, color: "text.secondary" }} />
+          </Stack>
+        </Stack>
+
+        {/* Airport codes */}
+        <Stack direction="row" justifyContent="space-between" alignItems="center">
+          <Typography variant="body2" sx={{ fontWeight: 700, fontSize: "0.875rem" }}>
+            {from}
+          </Typography>
+          <Typography variant="body2" sx={{ fontWeight: 700, fontSize: "0.875rem" }}>
+            {to}
+          </Typography>
+        </Stack>
+      </Stack>
+    </Box>
   );
 }
 
-function FlightCard({ f }: { f: FlightOffer }) {
+function FlightCard({ f, badges }: { f: FlightOffer; allFlights: FlightOffer[]; badges: Array<"cheapest" | "fastest" | "best"> }) {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const [expanded, setExpanded] = useState(false);
   const out = f.legs[0];
   const ret = f.legs[1];
 
@@ -137,40 +215,205 @@ function FlightCard({ f }: { f: FlightOffer }) {
     <Paper
       variant="outlined"
       sx={{
-        p: 2,
-        borderRadius: 1,
-        transition: "transform 120ms ease, box-shadow 120ms ease",
+        p: 2.5,
+        borderRadius: 3,
+        border: `1px solid ${alpha(theme.palette.divider, 0.5)}`,
+        transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+        position: "relative",
+        overflow: "hidden",
         "&:hover": {
-          transform: "translateY(-2px)",
-          boxShadow: 2,
+          transform: "translateY(-4px)",
+          boxShadow: theme.shadows[8],
+          borderColor: alpha(theme.palette.primary.main, 0.3),
         },
       }}
     >
-      <Stack direction="row" justifyContent="space-between" spacing={3}>
-        {/* LEFT */}
-        <Stack spacing={1.5} sx={{ minWidth: 0, flex: 1 }}>
-          {out && <LegRow title="Outbound" leg={out} />}
-          {ret && (
-            <>
-              <Divider sx={{ my: 0.5 }} />
-              <LegRow title="Return" leg={ret} />
-            </>
-          )}
+      <Stack spacing={2}>
+        {/* Main content */}
+        <Stack direction="row" justifyContent="space-between" spacing={3}>
+          {/* LEFT - Flight details */}
+          <Stack spacing={2} sx={{ minWidth: 0, flex: 1 }}>
+            {out && <LegRow title="Outbound" leg={out} />}
+            {ret && <LegRow title="Return" leg={ret} />}
 
-          <Typography variant="caption" color="text.secondary">
-            Airline: {f.validatingAirline}
-          </Typography>
+            {/* Airline and badges */}
+            <Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap" sx={{ pt: 0.5 }}>
+              <Chip
+                icon={<Box component="span">{getAirlineLogo(f.validatingAirline)}</Box>}
+                label={f.validatingAirline}
+                size="small"
+                variant="filled"
+                sx={{
+                  fontWeight: 600,
+                  bgcolor: "transparent",
+                }}
+              />
+              {badges.length > 0 && (
+                <Stack direction="row" spacing={0.75} flexWrap="wrap">
+                  {badges.map((badge) => (
+                    <Chip
+                      key={badge}
+                      size="small"
+                      label={badge === "best" ? "⭐ Best" : badge === "cheapest" ? "💰 Cheapest" : "⚡ Fastest"}
+                      color={badge === "best" ? "primary" : badge === "cheapest" ? "success" : "info"}
+                      sx={{
+                        fontWeight: 700,
+                        fontSize: "0.75rem",
+                        height: 24,
+                        boxShadow: `0 2px 4px ${alpha(theme.palette[badge === "best" ? "primary" : badge === "cheapest" ? "success" : "info"].main, 0.3)}`,
+                      }}
+                    />
+                  ))}
+                </Stack>
+              )}
+            </Stack>
+          </Stack>
+
+          {/* RIGHT - Price */}
+          <Stack
+            alignItems="flex-end"
+            justifyContent="space-between"
+            spacing={1}
+            sx={{
+              minWidth: 120,
+            }}
+          >
+            <Stack alignItems="flex-end" spacing={0.25}>
+              <Typography
+                variant="h5"
+                sx={{
+                  fontWeight: 900,
+                  lineHeight: 1.2,
+                }}
+              >
+                {Math.round(f.priceTotal)} {f.currency}
+              </Typography>
+              <Typography
+                variant="caption"
+                sx={{
+                  fontWeight: 500,
+                  color: "text.secondary",
+                }}
+              >
+                total
+              </Typography>
+            </Stack>
+            {isMobile && (
+              <IconButton
+                size="small"
+                onClick={() => setExpanded(!expanded)}
+                sx={{
+                  border: "1px solid",
+                  borderColor: "divider",
+                  "&:hover": {
+                    bgcolor: "action.hover",
+                  },
+                }}
+                aria-label={expanded ? "Collapse" : "Expand"}
+              >
+                <ExpandMoreIcon
+                  sx={{
+                    transform: expanded ? "rotate(180deg)" : "rotate(0deg)",
+                    transition: "transform 0.3s",
+                  }}
+                />
+              </IconButton>
+            )}
+          </Stack>
         </Stack>
 
-        {/* RIGHT */}
-        <Stack alignItems="flex-end" spacing={0.25} sx={{ minWidth: 120 }}>
-          <Typography variant="h6" sx={{ fontWeight: 950 }}>
-            {Math.round(f.priceTotal)} {f.currency}
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            total
-          </Typography>
-        </Stack>
+        {/* Mobile expandable details */}
+        {isMobile && (
+          <Collapse in={expanded}>
+            <Divider sx={{ my: 1 }} />
+            <Stack spacing={2}>
+              {out && (
+                <Box
+                  sx={{
+                    p: 1.5,
+                    borderRadius: 2,
+                    bgcolor: alpha(theme.palette.background.default, 0.5),
+                  }}
+                >
+                  <Typography
+                    variant="overline"
+                    sx={{
+                      fontWeight: 700,
+                      color: "text.secondary",
+                      letterSpacing: 1,
+                    }}
+                  >
+                    Outbound Details
+                  </Typography>
+                  <Stack spacing={1} sx={{ mt: 1 }}>
+                    {out.segments.map((seg, idx) => (
+                      <Box
+                        key={idx}
+                        sx={{
+                          p: 1,
+                          borderRadius: 1,
+                          bgcolor: alpha(theme.palette.primary.main, 0.05),
+                        }}
+                      >
+                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                          <Box component="span" sx={{ color: "primary.main" }}>
+                            {seg.carrier} {seg.flightNumber}
+                          </Box>
+                          : {seg.from} → {seg.to}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {fmtTime(seg.departAt)} - {fmtTime(seg.arriveAt)}
+                        </Typography>
+                      </Box>
+                    ))}
+                  </Stack>
+                </Box>
+              )}
+              {ret && (
+                <Box
+                  sx={{
+                    p: 1.5,
+                    borderRadius: 2,
+                    bgcolor: alpha(theme.palette.background.default, 0.5),
+                  }}
+                >
+                  <Typography
+                    variant="overline"
+                    sx={{
+                      fontWeight: 700,
+                      color: "text.secondary",
+                      letterSpacing: 1,
+                    }}
+                  >
+                    Return Details
+                  </Typography>
+                  <Stack spacing={1} sx={{ mt: 1 }}>
+                    {ret.segments.map((seg, idx) => (
+                      <Box
+                        key={idx}
+                        sx={{
+                          p: 1,
+                          borderRadius: 1,
+                          bgcolor: alpha(theme.palette.primary.main, 0.05),
+                        }}
+                      >
+                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                          <Box component="span" sx={{ color: "primary.main" }}>
+                            {seg.carrier} {seg.flightNumber}
+                          </Box>
+                          : {seg.from} → {seg.to}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {fmtTime(seg.departAt)} - {fmtTime(seg.arriveAt)}
+                        </Typography>
+                      </Box>
+                    ))}
+                  </Stack>
+                </Box>
+              )}
+            </Stack>
+          </Collapse>
+        )}
       </Stack>
     </Paper>
   );

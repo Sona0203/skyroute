@@ -17,6 +17,8 @@ A modern flight search application built with React, TypeScript, and the Amadeus
 - **Active Filter Chips** - See and remove active filters at a glance
 - **Sticky Search Summary** - Always see your search route and dates
 - **Skeleton Loading** - Smooth loading states while fetching results
+- **Virtualized List** - Efficient rendering of large result sets with react-window
+- **Infinite Scroll** - Automatically load more results as you scroll (10 items per page)
 - **Mobile Responsive** - Expandable flight details on mobile devices
 - **Dark Mode** - Toggle between light and dark themes with persistence
 - **Keyboard Shortcuts** - Press Enter to search, Esc to close drawers
@@ -29,6 +31,7 @@ A modern flight search application built with React, TypeScript, and the Amadeus
 - Smooth animations and transitions
 - Responsive layout for all screen sizes
 - Accessible components with proper ARIA labels
+- Beautiful flight cards with clear visual hierarchy
 
 ## Tech Stack
 
@@ -38,8 +41,9 @@ A modern flight search application built with React, TypeScript, and the Amadeus
 - **Vite** - Build tool and dev server
 - **Material-UI (MUI)** - Component library
 - **Redux Toolkit** - State management
-- **RTK Query** - Data fetching and caching
-- **Recharts** - Chart visualizations
+- **RTK Query** - Data fetching and caching with pagination support
+- **Recharts** - Chart visualizations with animations
+- **react-window** - Virtualization for efficient list rendering
 
 ### Backend (`server/`)
 - **Node.js** - Runtime
@@ -143,6 +147,11 @@ skyroute/
 │   │   ├── components/    # Shared components
 │   │   ├── features/      # Feature modules
 │   │   │   ├── flights/   # Flight search and display
+│   │   │   │   ├── components/
+│   │   │   │   │   ├── VirtualizedFlightList.tsx  # Virtualized list with infinite scroll
+│   │   │   │   │   └── ...
+│   │   │   │   └── hooks/
+│   │   │   │       └── useInfiniteFlights.ts  # Infinite scroll hook
 │   │   │   └── search/    # Search form and state
 │   │   └── theme/         # Theme configuration
 │   └── package.json
@@ -166,11 +175,18 @@ skyroute/
 - Visualizes price changes by departure hour
 - Shows min, median, and max prices
 - Provides insights like "Prices drop 15% by end of day"
+- Animated charts with smooth transitions
 
 ### Badges
 - **Cheapest**: Lowest price in results
 - **Fastest**: Shortest duration in results
 - **Best**: Both cheapest and fastest
+
+### Performance Optimizations
+- **Virtualization**: Only renders visible flight cards using react-window
+- **Infinite Scroll**: Loads 10 flights at a time as you scroll
+- **Pagination**: Efficient data loading with RTK Query
+- **Memoization**: Optimized selectors and components
 
 ## Environment Variables
 
@@ -196,6 +212,7 @@ skyroute/
 - Redux Toolkit for global state
 - RTK Query for server state and caching
 - Local storage for search persistence
+- Pagination support with infinite scroll
 
 ### Styling
 - Material-UI components
@@ -209,6 +226,15 @@ skyroute/
 - `GET /health` - Health check endpoint
 - `GET /api/airports?q=<query>` - Airport autocomplete
 - `GET /api/flights/search?origin=<code>&destination=<code>&departDate=<date>&returnDate=<date>` - Flight search
+
+## Performance
+
+The application uses several performance optimizations:
+- **Virtualization**: Only renders visible items in the flight list
+- **Pagination**: Loads 10 flights per page
+- **Infinite Scroll**: Automatically loads more as you scroll
+- **Memoization**: Cached selectors and components
+- **Debouncing**: Search requests are debounced to reduce API calls
 
 ## Browser Support
 - Chrome (latest)

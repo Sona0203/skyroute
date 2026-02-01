@@ -1,5 +1,4 @@
 import {
-    Button,
     Card,
     CardContent,
     IconButton,
@@ -28,38 +27,53 @@ import {
     const dispatch = useAppDispatch();
     const { origin, destination, departDate, returnDate, sort } = useAppSelector((s) => s.search);
   
-    // Prevent auto-search on very first mount
+    // Don't search automatically when the page first loads
     const didMountRef = useRef(false);
-    // Debounce timer
+    // Timer for debouncing searches
     const tRef = useRef<number | null>(null);
   
-    const canSearch = Boolean(origin && destination && departDate);
+  const canSearch = Boolean(origin && destination && departDate);
+
+  const handleSearch = () => {
+    if (canSearch) {
+      dispatch(submitSearch());
+    }
+  };
+
+  useEffect(() => {
+    // Skip the first time this runs (when the page loads)
+    if (!didMountRef.current) {
+      didMountRef.current = true;
+      return;
+    }
   
-    useEffect(() => {
-      // Skip first render (so no request when page opens)
-      if (!didMountRef.current) {
-        didMountRef.current = true;
-        return;
-      }
+    // Can't search without all the required fields
+    if (!canSearch) return;
   
-      // If required fields not filled, don't search
-      if (!canSearch) return;
+    // If the user changes multiple fields quickly, wait a bit before searching
+    // This way we only search once instead of spamming the server
+    if (tRef.current) window.clearTimeout(tRef.current);
+    tRef.current = window.setTimeout(() => {
+      dispatch(submitSearch());
+    }, AUTO_SEARCH_DEBOUNCE_MS);
   
-      // Debounce: if user changes multiple fields quickly, we only fire once
+    return () => {
       if (tRef.current) window.clearTimeout(tRef.current);
-      tRef.current = window.setTimeout(() => {
-        dispatch(submitSearch());
-      }, AUTO_SEARCH_DEBOUNCE_MS);
+    };
+  }, [origin, destination, departDate, returnDate, canSearch, dispatch]);
+
+  // Let users press Enter to search
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && canSearch) {
+      e.preventDefault();
+      handleSearch();
+    }
+  };
   
-      return () => {
-        if (tRef.current) window.clearTimeout(tRef.current);
-      };
-    }, [origin, destination, departDate, returnDate, canSearch, dispatch]);
-  
-    return (
-      <Card variant="outlined">
-        <CardContent>
-          <Stack spacing={2}>
+  return (
+    <Card variant="outlined" onKeyDown={handleKeyDown}>
+      <CardContent>
+        <Stack spacing={2}>
             <Stack direction="row" alignItems="baseline" justifyContent="space-between">
               <Typography variant="h6" sx={{ fontWeight: 800 }}>
                 Search flights
@@ -76,11 +90,12 @@ import {
                 >
                   <MenuItem value="price">Lowest price</MenuItem>
                   <MenuItem value="duration">Shortest duration</MenuItem>
+                  <MenuItem value="bestValue">Best value</MenuItem>
                 </TextField>
               </Stack>
             </Stack>
   
-            {/* Layout without MUI Grid (no TS Grid issues) */}
+            {/* Using Stack instead of Grid to avoid TypeScript issues */}
             <Stack
               direction={{ xs: "column", md: "row" }}
               spacing={2}

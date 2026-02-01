@@ -1,5 +1,8 @@
-import { AppBar, Box, Container, Toolbar, Typography, useMediaQuery, useTheme } from "@mui/material";
+import { AppBar, Box, Container, IconButton, Toolbar, Typography, useMediaQuery, useTheme } from "@mui/material";
 import FlightTakeoffIcon from "@mui/icons-material/FlightTakeoff";
+import LightModeIcon from "@mui/icons-material/LightMode";
+import DarkModeIcon from "@mui/icons-material/DarkMode";
+import { useThemeMode } from "../theme/ThemeContext";
 
 type Props = {
   title?: string;
@@ -12,6 +15,7 @@ export default function Header({
 }: Props) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const { mode, toggleMode } = useThemeMode();
 
   return (
     <AppBar
@@ -62,16 +66,21 @@ export default function Header({
           <Box sx={{ flex: 1 }} />
   
           {/* RIGHT */}
-          {!isMobile && (
-            <Box sx={{ textAlign: "right" }}>
-              <Typography variant="body2" sx={{ fontWeight: 700 }}>
-                {subtitle}
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                Powered by Amadeus
-              </Typography>
-            </Box>
-          )}
+          <IconButton
+            onClick={toggleMode}
+            aria-label="Toggle dark mode"
+            size="small"
+            sx={{ 
+              border: "1px solid", 
+              borderColor: "divider",
+              color: "#ffc107",
+              "&:hover": {
+                color: "#ffb300",
+              }
+            }}
+          >
+            {mode === "dark" ? <LightModeIcon fontSize="small" /> : <DarkModeIcon fontSize="small" />}
+          </IconButton>
         </Toolbar>
       </Container>
     </AppBar>

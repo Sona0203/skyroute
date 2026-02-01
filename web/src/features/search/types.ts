@@ -15,7 +15,7 @@ export type SearchState = {
       priceMax?: number;
     };
   
-    sort: "price" | "duration";
+    sort: "price" | "duration" | "bestValue";
 };
 
 export type SubmittedQuery = {

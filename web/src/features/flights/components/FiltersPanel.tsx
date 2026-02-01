@@ -67,7 +67,7 @@ import {
             <RadioGroup
               value={filters.stops}
               onChange={(e) => {
-                // ✅ keep as string literals: "any" | "0" | "1" | "2+"
+                // These are the valid values: "any", "0", "1", or "2+"
                 dispatch(setStopsFilter(e.target.value as any));
               }}
             >
@@ -110,7 +110,7 @@ import {
   
         <Divider />
   
-        {/* Airlines (✅ CHECKBOX MULTI-SELECT) */}
+        {/* Airlines - users can select multiple */}
         <Box>
           <Typography variant="overline" color="text.secondary">
             Airlines

@@ -2,26 +2,29 @@ import { createSelector } from "@reduxjs/toolkit";
 import type { RootState } from "../../app/store";
 import type { ChartPoint, FlightOffer } from "./types";
 
+// Keep a single empty array reference so we don't create new ones every time
+const EMPTY_FLIGHTS: FlightOffer[] = [];
+
 function getTotalDurationMinutes(f: FlightOffer) {
-  // works for one-way (1 leg) and round-trip (2 legs)
+  // Add up all the legs - works whether it's one-way or round-trip
   return f.legs.reduce((sum, leg) => sum + (leg.durationMinutes ?? 0), 0);
 }
 
 function matchesStopsFilter(f: FlightOffer, stops: RootState["search"]["filters"]["stops"]) {
-  // StopsFilter should be: "any" | "0" | "1" | "2+"
+  // Check if the flight matches what the user wants for stops
   if (stops === "any") return true;
 
   if (stops === "0") {
-    // direct only: every leg must be direct
+    // User wants direct flights only - every leg must be direct
     return f.legs.every((l) => (l.stopsCount ?? 0) === 0);
   }
 
   if (stops === "1") {
-    // exactly 1 stop for every leg
+    // User wants exactly one stop per leg
     return f.legs.every((l) => (l.stopsCount ?? 0) === 1);
   }
 
-  // "2+"
+  // User wants 2+ stops
   return f.legs.every((l) => (l.stopsCount ?? 0) >= 2);
 }
 
@@ -38,29 +41,55 @@ function matchesPriceFilter(
 export const makeSelectFilteredFlights = () =>
   createSelector(
     [
-      (state: RootState, flights?: FlightOffer[]) => flights ?? [],
-      (state: RootState) => state.search.filters,
+      (_: RootState, flights?: FlightOffer[]) => flights ?? EMPTY_FLIGHTS,
+      (state: RootState) => state.search.filters.stops,
+      (state: RootState) => state.search.filters.airlines,
+      (state: RootState) => state.search.filters.priceMin,
+      (state: RootState) => state.search.filters.priceMax,
       (state: RootState) => state.search.sort,
     ],
-    (flights, filters, sort) => {
+    (flights, stops, airlines, priceMin, priceMax, sort) => {
       let res = flights;
 
-      // Price
-      res = res.filter((f) => matchesPriceFilter(f, filters.priceMin, filters.priceMax));
+      // Filter by price range first
+      res = res.filter((f) => matchesPriceFilter(f, priceMin, priceMax));
 
-      // Stops
-      res = res.filter((f) => matchesStopsFilter(f, filters.stops));
+      // Then filter by number of stops
+      res = res.filter((f) => matchesStopsFilter(f, stops));
 
-      // Airlines (LAST)
-      if (filters.airlines.length > 0) {
-        res = res.filter((f) => filters.airlines.includes(f.validatingAirline));
+      // Finally filter by airlines (we do this last so the counts update properly)
+      if (airlines.length > 0) {
+        res = res.filter((f) => airlines.includes(f.validatingAirline));
       }
 
-      // Sort
+      // Now sort them based on what the user chose
       if (sort === "price") {
         res = [...res].sort((a, b) => a.priceTotal - b.priceTotal);
       } else if (sort === "duration") {
         res = [...res].sort((a, b) => getTotalDurationMinutes(a) - getTotalDurationMinutes(b));
+      } else if (sort === "bestValue") {
+        // For best value, we balance price and duration
+        if (res.length === 0) return res;
+        const prices = res.map((f) => f.priceTotal);
+        const durations = res.map((f) => getTotalDurationMinutes(f));
+        const minPrice = Math.min(...prices);
+        const maxPrice = Math.max(...prices);
+        const minDuration = Math.min(...durations);
+        const maxDuration = Math.max(...durations);
+        const priceRange = maxPrice - minPrice || 1;
+        const durationRange = maxDuration - minDuration || 1;
+
+        res = [...res].sort((a, b) => {
+          // Score each flight: 0 is best, 1 is worst
+          // We weight price at 60% and duration at 40%
+          const scoreA =
+            (a.priceTotal - minPrice) / priceRange * 0.6 +
+            (getTotalDurationMinutes(a) - minDuration) / durationRange * 0.4;
+          const scoreB =
+            (b.priceTotal - minPrice) / priceRange * 0.6 +
+            (getTotalDurationMinutes(b) - minDuration) / durationRange * 0.4;
+          return scoreA - scoreB;
+        });
       }
 
       return res;
@@ -68,8 +97,8 @@ export const makeSelectFilteredFlights = () =>
   );
 
 export const makeSelectChartSeries = () =>
-  createSelector([(_s: RootState, filtered: FlightOffer[]) => filtered], (filtered) => {
-    // bucket by outbound departure hour; compute min/median/max
+  createSelector([(_: RootState, filtered: FlightOffer[]) => filtered ?? EMPTY_FLIGHTS], (filtered) => {
+    // Group flights by what hour they depart, then figure out the min, median, and max prices
     const buckets = new Map<string, number[]>();
 
     for (const f of filtered) {
@@ -96,14 +125,14 @@ export const makeSelectChartSeries = () =>
 export const makeSelectAvailableAirlines = () =>
   createSelector(
     [
-      (state: RootState, flights?: FlightOffer[]) => flights ?? [],
+      (_: RootState, flights?: FlightOffer[]) => flights ?? EMPTY_FLIGHTS,
       (state: RootState) => state.search.filters.priceMin,
       (state: RootState) => state.search.filters.priceMax,
       (state: RootState) => state.search.filters.stops,
     ],
     (flights, priceMin, priceMax, stops) => {
-      // IMPORTANT: apply price+stops, but NOT selected airlines,
-      // so counts update when price/stops changes.
+      // We only apply price and stops filters here, not airline filters
+      // This way the airline counts update when you change price or stops
       const map = new Map<string, number>();
 
       for (const f of flights) {
@@ -121,7 +150,7 @@ export const makeSelectAvailableAirlines = () =>
 
 export const makeSelectPriceBounds = () =>
   createSelector(
-    [(state: RootState, flights: FlightOffer[] | undefined) => flights ?? []],
+    [(_: RootState, flights: FlightOffer[] | undefined) => flights ?? EMPTY_FLIGHTS],
     (flights) => {
       if (!flights.length) return { min: 0, max: 0 };
 

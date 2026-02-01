@@ -185,7 +185,7 @@ function VirtualizedFlightList({
           }}
         >
           <Stack spacing={2}>
-            {flights.map((flight, index) => {
+            {flights.map((flight) => {
               const badges = getFlightBadges(flight, allFlights);
               return (
                 <Box key={flight.id} sx={{ px: { xs: 0, sm: 0.5 } }}>

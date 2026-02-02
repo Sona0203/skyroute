@@ -270,7 +270,6 @@ import SearchIcon from "@mui/icons-material/Search";
                           cursor: "pointer",
                         }
                       },
-                      required: tripType === "round-trip",
                     },
                   }}
                 />

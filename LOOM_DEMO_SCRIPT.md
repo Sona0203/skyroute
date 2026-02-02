@@ -12,19 +12,19 @@
 
 ### Part 1: Core Features (50 seconds)
 
-"Let me start by showing you the search form. SkyRoute supports both one-way and round-trip searches. The airport autocomplete uses IATA codes and debounces API calls to prevent rate limiting. Notice the date pickers - they automatically disable dates that have no available flights, which I'll demonstrate in a moment. The travelers field accepts manual input from 1 to 30 travelers, and when multiple travelers are selected, the app shows both total price and price per person on each flight card. I chose a manual search button instead of auto-search so users have full control over when to trigger the search, and they can also press Enter to search."
+"Let me start by showing you the search form. SkyRoute supports both one-way and round-trip searches. The airport autocomplete uses IATA codes and debounces API calls to prevent rate limiting. Notice the date pickers - they automatically disable dates that have no available flights, which helps prevent users from selecting dates with no results. The travelers field accepts manual input travelers, and when multiple travelers are selected, the app shows both total price and price per person on each flight card. I chose a manual search button instead of auto-search so users have full control over when to trigger the search, and they can also press Enter to search."
 
 ---
 
 ### Part 2: Technical Architecture (50 seconds)
 
-"For state management, I chose Redux Toolkit with RTK Query. Redux Toolkit handles all search parameters, filters, and sort options, and it makes it easy to persist the search state to localStorage so users don't lose their search when they refresh the page. RTK Query handles all API calls with built-in caching, automatic request deduplication, and pagination support. It also manages loading and error states automatically, which keeps my code clean. I integrated directly with the Amadeus API from the frontend, which required careful OAuth token management. I implemented token caching with expiration tracking and a 10-second buffer to prevent race conditions. For error handling, I added exponential backoff retry for rate limit errors, keyword sanitization to prevent bad requests, and user-friendly error messages. The airport autocomplete is debounced by 500 milliseconds to reduce API calls and avoid hitting rate limits."
+"For state management, I chose Redux Toolkit with RTK Query. Redux Toolkit handles all search parameters, filters, and sort options, and it makes it easy to persist the search state to localStorage so users don't lose their search when they refresh the page. RTK Query handles all API calls with built-in caching, automatic request deduplication, and pagination support. It also manages loading and error states automatically, which keeps my code clean. I integrated directly with the Amadeus API from the frontend, which required careful OAuth token management. I implemented token caching with expiration tracking and a 10-second buffer to prevent race conditions. The airport autocomplete is debounced by 500 milliseconds to reduce API calls and avoid hitting rate limits."
 
 ---
 
 ### Part 3: User Experience Features (60 seconds)
 
-"One of my favorite features is the smart date picker. When a search returns no flights for a specific date, that date gets marked in the Redux state. Future searches automatically disable those dates in the picker, preventing users from selecting dates that won't have results. This works for both departure and return dates. Let me show you - if I search for a route and get no results, those dates will be disabled. Now if I try to select one, it won't work. For the travelers input, I used a text input with a numeric keyboard instead of a number input. This uses local state for free typing and syncs to Redux when the user finishes editing. This approach ensures it works consistently across all browsers and devices, especially on mobile. When multiple travelers are selected, you can see the price breakdown on each flight card showing both the total and per-person price."
+"One of my favorite features is the smart date picker. When a search returns no flights for a specific date, that date automatically gets marked in the Redux state and disabled in the picker. This prevents users from selecting dates that won't have results, saving them time and frustration. The feature works for both departure and return dates, and it persists across searches so users don't accidentally try the same unavailable dates again. It's hard to demonstrate this live since most dates usually have flights available, but the feature is fully implemented and working in the background. For the travelers input, I used a text input with a numeric keyboard instead of a number input. This uses local state for free typing and syncs to Redux when the user finishes editing. This approach ensures it works consistently across all browsers and devices, especially on mobile. When multiple travelers are selected, you can see the price breakdown on each flight card showing both the total and per-person price."
 
 ---
 
@@ -65,7 +65,7 @@
 9. **Sort options** - Switch between them
 10. **Price per person** - If multiple travelers
 11. **Infinite scroll** - Scroll to load more
-12. **Date disabling** - Show disabled dates
+12. **Date disabling** - Mention the feature (optional - only if you find unavailable dates)
 13. **Loading states** - Trigger a search
 
 ---

@@ -223,15 +223,16 @@ export default function ResultsLayout() {
               </Box>
               <TextField
                 select
-                size="medium"
+                size="small"
                 label="Sort"
                 value={sort}
                 onChange={(e) => dispatch(setSort(e.target.value as any))}
                 sx={{
-                  minWidth: { xs: "100%", sm: 160 },
+                  minWidth: { xs: "100%", sm: 140 },
                   "& .MuiInputBase-root": {
-                    minHeight: { xs: 56, sm: 56 },
+                    minHeight: { xs: 42, sm: 42 },
                     borderRadius: 1,
+                    fontSize: "0.875rem",
                   }
                 }}
               >
@@ -242,13 +243,15 @@ export default function ResultsLayout() {
             </Box>
 
             {filteredFlights.length > 0 ? (
-              <VirtualizedFlightList
+              <Box sx={{ mt: "0 !important", marginTop: "0 !important" }}>
+                <VirtualizedFlightList
                 flights={filteredFlights}
                 allFlights={filteredFlights}
                 onLoadMore={loadMore}
                 hasMore={hasMore}
                 isLoadingMore={isLoadingMore}
               />
+              </Box>
             ) : (
               <EmptyState
                 title="No flights match your filters"

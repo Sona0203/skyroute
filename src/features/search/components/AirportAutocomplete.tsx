@@ -118,14 +118,21 @@ export default function AirportAutocomplete({ label, value, onChange }: Props) {
           {...params}
           label={label}
           fullWidth
+          size="small"
           InputProps={{
             ...params.InputProps,
             endAdornment: (
               <>
-                {loading ? <CircularProgress size={18} /> : null}
+                {loading ? <CircularProgress size={16} /> : null}
                 {params.InputProps.endAdornment}
               </>
             ),
+          }}
+          sx={{
+            "& .MuiInputBase-root": {
+              minHeight: { xs: 42, sm: 42 },
+              fontSize: "0.875rem",
+            }
           }}
         />
       )}

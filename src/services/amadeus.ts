@@ -44,7 +44,7 @@ async function getAccessToken(): Promise<string> {
   return tokenCache.token!;
 }
 
-async function amadeusGet(path: string, query: Record<string, string | undefined>, retries = 2): Promise<any> {
+async function amadeusGet(path: string, query: Record<string, string | undefined>, retries = 3): Promise<any> {
   const token = await getAccessToken();
 
   const qs = new URLSearchParams();
@@ -66,8 +66,8 @@ async function amadeusGet(path: string, query: Record<string, string | undefined
     // Retry on rate limit errors
     if (resp.status === 429) {
       if (retries > 0) {
-        // Exponential backoff: 1s, 2s, 4s
-        const waitTime = Math.pow(2, 2 - retries) * 1000;
+        // Exponential backoff with longer waits: 2s, 4s, 8s
+        const waitTime = Math.pow(2, 4 - retries) * 1000;
         await new Promise(resolve => setTimeout(resolve, waitTime));
         return amadeusGet(path, query, retries - 1);
       }

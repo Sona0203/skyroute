@@ -5,7 +5,7 @@ export const MOBILE_BREAKPOINT = "md" as const;
 export const MOBILE_BREAKPOINT_SM = "sm" as const;
 
 export const AUTO_SEARCH_DEBOUNCE_MS = 350;
-export const AIRPORT_AUTOCOMPLETE_DEBOUNCE_MS = 500;
+export const AIRPORT_AUTOCOMPLETE_DEBOUNCE_MS = 800;
 
 export const BASE_ITEM_HEIGHT = 200;
 export const BASE_ITEM_HEIGHT_MOBILE = 450;

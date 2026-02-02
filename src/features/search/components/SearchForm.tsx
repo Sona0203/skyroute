@@ -85,13 +85,13 @@ import SearchIcon from "@mui/icons-material/Search";
             dispatch(setTripType(newValue === 0 ? "one-way" : "round-trip"));
           }}
           sx={{
-            minHeight: 48,
+            minHeight: 40,
             "& .MuiTab-root": {
-              minHeight: 48,
+              minHeight: 40,
               textTransform: "none",
-              fontSize: "0.9375rem",
+              fontSize: "0.875rem",
               fontWeight: 500,
-              px: 3,
+              px: 2,
             },
           }}
         >
@@ -100,7 +100,7 @@ import SearchIcon from "@mui/icons-material/Search";
         </Tabs>
       </Box>
 
-      <CardContent sx={{ p: { xs: 2, sm: 2.5 } }}>
+      <CardContent sx={{ p: { xs: 1, sm: 1.5 } }}>
         {/* Search form fields */}
         <Stack
           direction={{ xs: "column", lg: "row" }}
@@ -112,7 +112,7 @@ import SearchIcon from "@mui/icons-material/Search";
             }
           }}
         >
-          <Box sx={{ flex: { xs: 1, lg: "1.3 1 0" }, px: { xs: 0, lg: 1 }, py: { xs: 1, lg: 0 } }}>
+          <Box sx={{ flex: { xs: 1, lg: "1.3 1 0" }, px: { xs: 0, lg: 0.75 }, py: { xs: 0.75, lg: 0 } }}>
             <AirportAutocomplete
               label="From"
               value={origin}
@@ -132,9 +132,10 @@ import SearchIcon from "@mui/icons-material/Search";
               aria-label="Swap route"
               disabled={!origin || !destination}
               onClick={() => dispatch(swapRoute())}
+              size="small"
               sx={{ 
-                width: 36,
-                height: 36,
+                width: 32,
+                height: 32,
                 "&:hover": {
                   bgcolor: alpha(theme.palette.action.hover, 0.5),
                 },
@@ -147,7 +148,7 @@ import SearchIcon from "@mui/icons-material/Search";
             </IconButton>
           </Box>
 
-          <Box sx={{ flex: { xs: 1, lg: "1.3 1 0" }, px: { xs: 0, lg: 1 }, py: { xs: 1, lg: 0 } }}>
+          <Box sx={{ flex: { xs: 1, lg: "1.3 1 0" }, px: { xs: 0, lg: 0.75 }, py: { xs: 0.75, lg: 0 } }}>
             <AirportAutocomplete
               label="To"
               value={destination}
@@ -156,7 +157,7 @@ import SearchIcon from "@mui/icons-material/Search";
           </Box>
 
           <LocalizationProvider dateAdapter={AdapterDateFns}>
-            <Box sx={{ flex: { xs: 1, lg: "0.6 1 0" }, px: { xs: 0, lg: 1 }, py: { xs: 1, lg: 0 } }}>
+            <Box sx={{ flex: { xs: 1, lg: "0.6 1 0" }, px: { xs: 0, lg: 0.75 }, py: { xs: 0.75, lg: 0 } }}>
               <DatePicker
                 label="Departure"
                 format="dd/MM/yyyy"
@@ -181,7 +182,7 @@ import SearchIcon from "@mui/icons-material/Search";
                 slotProps={{
                   textField: {
                     fullWidth: true,
-                    size: "medium",
+                    size: "small",
                     InputLabelProps: { shrink: true },
                     onClick: () => setDepartPickerOpen(true),
                     InputProps: {
@@ -189,7 +190,8 @@ import SearchIcon from "@mui/icons-material/Search";
                     },
                     sx: {
                       "& .MuiInputBase-root": {
-                        minHeight: { xs: 56, sm: 56 },
+                        minHeight: { xs: 42, sm: 42 },
+                        fontSize: "0.875rem",
                         cursor: "pointer",
                         borderRadius: 1,
                       },
@@ -203,7 +205,7 @@ import SearchIcon from "@mui/icons-material/Search";
             </Box>
   
             {tripType === "round-trip" && (
-              <Box sx={{ flex: { xs: 1, lg: "0.6 1 0" }, px: { xs: 0, lg: 1 }, py: { xs: 1, lg: 0 } }}>
+              <Box sx={{ flex: { xs: 1, lg: "0.6 1 0" }, px: { xs: 0, lg: 0.75 }, py: { xs: 0.75, lg: 0 } }}>
                 <DatePicker
                   label="Return"
                   format="dd/MM/yyyy"
@@ -230,7 +232,7 @@ import SearchIcon from "@mui/icons-material/Search";
                   slotProps={{
                     textField: {
                       fullWidth: true,
-                      size: "medium",
+                      size: "small",
                       InputLabelProps: { shrink: true },
                       onClick: () => setReturnPickerOpen(true),
                       InputProps: {
@@ -259,7 +261,8 @@ import SearchIcon from "@mui/icons-material/Search";
                       },
                       sx: {
                         "& .MuiInputBase-root": {
-                          minHeight: { xs: 56, sm: 56 },
+                          minHeight: { xs: 42, sm: 42 },
+                          fontSize: "0.875rem",
                           cursor: "pointer",
                           borderRadius: 1,
                         },
@@ -275,7 +278,7 @@ import SearchIcon from "@mui/icons-material/Search";
             )}
           </LocalizationProvider>
 
-          <Box sx={{ flex: { xs: 1, lg: "0.5 1 0" }, px: { xs: 0, lg: 1 }, py: { xs: 1, lg: 0 } }}>
+          <Box sx={{ flex: { xs: 1, lg: "0.5 1 0" }, px: { xs: 0, lg: 0.75 }, py: { xs: 0.75, lg: 0 } }}>
             <TextField
               type="text"
               label="Travelers"
@@ -304,12 +307,13 @@ import SearchIcon from "@mui/icons-material/Search";
                 inputMode: "numeric",
                 pattern: "[0-9]*"
               }}
-              size="medium"
+              size="small"
               fullWidth
               sx={{
                 "& .MuiInputBase-root": {
-                  minHeight: { xs: 56, sm: 56 },
+                  minHeight: { xs: 42, sm: 42 },
                   borderRadius: 1,
+                  fontSize: "0.875rem",
                 }
               }}
             />
@@ -317,18 +321,18 @@ import SearchIcon from "@mui/icons-material/Search";
 
           <Box sx={{ 
             flex: { xs: 1, lg: "0 0 auto" },
-            px: { xs: 0, lg: 1 },
-            py: { xs: 1, lg: 0 }
+            px: { xs: 0, lg: 0.75 },
+            py: { xs: 0.75, lg: 0 }
           }}>
             <Button
               variant="contained"
               fullWidth
-              size="large"
+              size="medium"
               onClick={handleSearch}
               disabled={!canSearch}
               sx={{
-                minHeight: { xs: 56, lg: 56 },
-                minWidth: { xs: "auto", lg: 56 },
+                minHeight: { xs: 42, lg: 42 },
+                minWidth: { xs: "auto", lg: 48 },
                 borderRadius: 1,
                 bgcolor: canSearch ? "#ff5a5f" : undefined,
                 color: canSearch ? "#ffffff" : undefined,

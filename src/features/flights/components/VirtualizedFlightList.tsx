@@ -50,7 +50,7 @@ function VirtualizedFlightList({
   }
 
   return (
-    <Stack spacing={{ xs: 1, sm: 1.5 }}>
+    <Stack spacing={{ xs: 1, sm: 1.5 }} sx={{ mt: "0 !important", marginTop: "0 !important" }}>
       <Typography 
         variant="subtitle1" 
         sx={{ 
